@@ -57,10 +57,11 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
   command palette, theme toggle), routing skeleton, Zod domain schemas,
   `WireMockClient` SDK, multi-server management with health checks, and a
   live dashboard.
-- **Phase 2 — Mapping management**: full stub CRUD, visual builder, Monaco
+- **Phase 2 — Mapping management** ✅ full stub CRUD, visual builder, Monaco
   JSON editor, matcher support, diff view.
-- **Phase 3 — Response configuration**: headers/cookies/delay/fault/proxy/
-  templating editors integrated into the mapping form.
+- **Phase 3 — Response configuration** ✅ headers/delay distribution/fault/
+  proxy (with extra proxy headers)/chunked dribble/templating (incl. custom
+  transformers and parameters) editors integrated into the mapping form.
 - **Phase 4 — File explorer**: browse/upload/edit `__files`, link
   `bodyFileName` references, dependency graph.
 - **Phase 5 — Request journal & near misses**: live journal, search/filter,

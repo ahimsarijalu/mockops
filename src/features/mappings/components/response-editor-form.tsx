@@ -13,6 +13,14 @@ import type { ResponseDefinition } from '@/shared/types/wiremock'
 import { FAULT_TYPES, RESPONSE_BODY_MODES, type ResponseBodyMode } from '../schemas/matcher-options'
 import { KeyValueMatcherEditor } from './key-value-matcher-editor'
 
+type DelayDistributionType = 'none' | 'uniform' | 'lognormal'
+
+const DELAY_DISTRIBUTION_TYPES: { value: DelayDistributionType; label: string }[] = [
+  { value: 'none', label: 'None' },
+  { value: 'uniform', label: 'Uniform' },
+  { value: 'lognormal', label: 'Log-normal' },
+]
+
 interface ResponseEditorFormProps {
   response: ResponseDefinition
   onChange: (response: ResponseDefinition) => void
@@ -31,6 +39,10 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
     response.jsonBody !== undefined ? JSON.stringify(response.jsonBody, null, 2) : '{\n  \n}',
   )
   const [jsonError, setJsonError] = useState<string | null>(null)
+  const [transformerParamsText, setTransformerParamsText] = useState(() =>
+    JSON.stringify(response.transformerParameters ?? {}, null, 2),
+  )
+  const [transformerParamsError, setTransformerParamsError] = useState<string | null>(null)
 
   const switchBodyMode = (mode: ResponseBodyMode) => {
     setBodyMode(mode)
@@ -61,6 +73,34 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
       { equalTo: Array.isArray(v) ? v.join(', ') : v },
     ]),
   )
+
+  const proxyHeaderEntries = Object.fromEntries(
+    Object.entries(response.additionalProxyRequestHeaders ?? {}).map(([k, v]) => [
+      k,
+      { equalTo: v },
+    ]),
+  )
+
+  const delayDistributionType: DelayDistributionType = response.delayDistribution?.type ?? 'none'
+
+  const setDelayDistributionType = (type: DelayDistributionType) => {
+    if (type === 'none') {
+      onChange({ ...response, delayDistribution: undefined })
+    } else if (type === 'uniform') {
+      onChange({
+        ...response,
+        delayDistribution: { type: 'uniform', lower: 0, upper: 1000 },
+      })
+    } else {
+      onChange({
+        ...response,
+        delayDistribution: { type: 'lognormal', median: 100, sigma: 0.1 },
+      })
+    }
+  }
+
+  const transformers = response.transformers ?? []
+  const customTransformers = transformers.filter((t) => t !== 'response-template')
 
   return (
     <div className="space-y-4">
@@ -200,6 +240,127 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
         </div>
       </div>
 
+      {response.proxyBaseUrl && (
+        <div className="grid gap-1.5">
+          <Label>Additional proxy request headers</Label>
+          <KeyValueMatcherEditor
+            value={proxyHeaderEntries}
+            onChange={(headers) => {
+              const next: Record<string, string> = {}
+              for (const [key, pattern] of Object.entries(headers)) {
+                if (typeof pattern.equalTo === 'string') next[key] = pattern.equalTo
+              }
+              onChange({
+                ...response,
+                additionalProxyRequestHeaders: Object.keys(next).length > 0 ? next : undefined,
+              })
+            }}
+            keyPlaceholder="Header name"
+            addLabel="Add proxy request header"
+          />
+        </div>
+      )}
+
+      <div className="grid gap-1.5">
+        <Label>Delay distribution</Label>
+        <div className="grid grid-cols-3 gap-4">
+          <Select
+            value={delayDistributionType}
+            onValueChange={(value) => setDelayDistributionType(value as DelayDistributionType)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DELAY_DISTRIBUTION_TYPES.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {delayDistributionType === 'uniform' && (
+            <>
+              <div className="grid gap-1.5">
+                <Label>Lower bound (ms)</Label>
+                <Input
+                  type="number"
+                  value={response.delayDistribution?.lower ?? ''}
+                  onChange={(e) =>
+                    onChange({
+                      ...response,
+                      delayDistribution: {
+                        ...response.delayDistribution,
+                        type: 'uniform',
+                        lower: Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Upper bound (ms)</Label>
+                <Input
+                  type="number"
+                  value={response.delayDistribution?.upper ?? ''}
+                  onChange={(e) =>
+                    onChange({
+                      ...response,
+                      delayDistribution: {
+                        ...response.delayDistribution,
+                        type: 'uniform',
+                        upper: Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+              </div>
+            </>
+          )}
+
+          {delayDistributionType === 'lognormal' && (
+            <>
+              <div className="grid gap-1.5">
+                <Label>Median (ms)</Label>
+                <Input
+                  type="number"
+                  value={response.delayDistribution?.median ?? ''}
+                  onChange={(e) =>
+                    onChange({
+                      ...response,
+                      delayDistribution: {
+                        ...response.delayDistribution,
+                        type: 'lognormal',
+                        median: Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Sigma</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={response.delayDistribution?.sigma ?? ''}
+                  onChange={(e) =>
+                    onChange({
+                      ...response,
+                      delayDistribution: {
+                        ...response.delayDistribution,
+                        type: 'lognormal',
+                        sigma: Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-1.5">
           <Label>Chunked dribble delay — number of chunks</Label>
@@ -241,22 +402,69 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={!!response.transformers?.includes('response-template')}
-          onChange={(e) => {
-            const transformers = new Set(response.transformers ?? [])
-            if (e.target.checked) transformers.add('response-template')
-            else transformers.delete('response-template')
-            onChange({
-              ...response,
-              transformers: transformers.size > 0 ? Array.from(transformers) : undefined,
-            })
-          }}
-        />
-        Enable response templating (response-template transformer)
-      </label>
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={transformers.includes('response-template')}
+            onChange={(e) => {
+              const next = new Set(transformers)
+              if (e.target.checked) next.add('response-template')
+              else next.delete('response-template')
+              onChange({
+                ...response,
+                transformers: next.size > 0 ? Array.from(next) : undefined,
+              })
+            }}
+          />
+          Enable response templating (response-template transformer)
+        </label>
+
+        <div className="grid gap-1.5">
+          <Label>Additional transformers (comma separated)</Label>
+          <Input
+            value={customTransformers.join(', ')}
+            onChange={(e) => {
+              const extra = e.target.value
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean)
+              const next = transformers.includes('response-template')
+                ? ['response-template', ...extra]
+                : extra
+              onChange({ ...response, transformers: next.length > 0 ? next : undefined })
+            }}
+            placeholder="my-custom-transformer"
+            className="font-mono"
+          />
+        </div>
+
+        {transformers.length > 0 && (
+          <div className="grid gap-1.5">
+            <Label>Transformer parameters (JSON)</Label>
+            <MonacoJsonEditor
+              value={transformerParamsText}
+              onChange={(value) => {
+                setTransformerParamsText(value)
+                try {
+                  const parsed = JSON.parse(value) as Record<string, unknown>
+                  setTransformerParamsError(null)
+                  onChange({
+                    ...response,
+                    transformerParameters: Object.keys(parsed).length > 0 ? parsed : undefined,
+                  })
+                } catch {
+                  setTransformerParamsError('Invalid JSON')
+                }
+              }}
+              height={140}
+            />
+            {transformerParamsError && (
+              <p className="text-xs text-destructive">{transformerParamsError}</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
