@@ -64,8 +64,9 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
   transformers and parameters) editors integrated into the mapping form.
 - **Phase 4 — File explorer** ✅ browse/create/edit/delete `__files`, with
   links to mappings referencing each file via `bodyFileName`.
-- **Phase 5 — Request journal & near misses**: live journal, search/filter,
-  diffing, near-miss diagnostics.
+- **Phase 5 — Request journal & near misses** ✅ live, auto-refreshing
+  journal with search/filtering, virtualized table, request/response detail
+  inspector, journal clearing, and near-miss diagnostics.
 - **Phase 6 — Scenarios & recordings**: scenario state graphs, recording
   start/stop/review.
 - **Phase 7 — Import/export, bulk ops, metadata/tags, settings, audit log**.
