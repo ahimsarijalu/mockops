@@ -62,8 +62,8 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
 - **Phase 3 — Response configuration** ✅ headers/delay distribution/fault/
   proxy (with extra proxy headers)/chunked dribble/templating (incl. custom
   transformers and parameters) editors integrated into the mapping form.
-- **Phase 4 — File explorer**: browse/upload/edit `__files`, link
-  `bodyFileName` references, dependency graph.
+- **Phase 4 — File explorer** ✅ browse/create/edit/delete `__files`, with
+  links to mappings referencing each file via `bodyFileName`.
 - **Phase 5 — Request journal & near misses**: live journal, search/filter,
   diffing, near-miss diagnostics.
 - **Phase 6 — Scenarios & recordings**: scenario state graphs, recording
