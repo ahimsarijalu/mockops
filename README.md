@@ -67,8 +67,9 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
 - **Phase 5 — Request journal & near misses** ✅ live, auto-refreshing
   journal with search/filtering, virtualized table, request/response detail
   inspector, journal clearing, and near-miss diagnostics.
-- **Phase 6 — Scenarios & recordings**: scenario state graphs, recording
-  start/stop/review.
+- **Phase 6 — Scenarios & recordings** ✅ scenario state view with reset/set
+  state controls and derived transition graphs, plus recording start/stop/
+  snapshot with captured-mapping review.
 - **Phase 7 — Import/export, bulk ops, metadata/tags, settings, audit log**.
 - **Phase 8 — Testing, accessibility polish, Docker/Nginx/Kubernetes/Helm/CI**.
 

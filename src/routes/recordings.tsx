@@ -1,14 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { RadioIcon } from 'lucide-react'
-import { PlaceholderPage } from '@/shared/components/feedback/placeholder-page'
+import { RecordingsPage } from '@/features/recordings/pages/recordings-page'
 
 export const Route = createFileRoute('/recordings')({
-  component: () => (
-    <PlaceholderPage
-      title="Recordings"
-      description="Start/stop proxy recording sessions and review generated mappings."
-      icon={RadioIcon}
-      phase="Phase 6"
-    />
-  ),
+  component: RecordingsPage,
 })
