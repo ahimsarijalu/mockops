@@ -1,9 +1,5 @@
 import type { ServeEvent } from '@/shared/types/wiremock'
 
-export function getServeEventUrl(event: ServeEvent): string {
-  return event.request.url
-}
-
 export function getStatusBadgeVariant(
   status: number | undefined,
 ): 'success' | 'warning' | 'destructive' | 'secondary' {
