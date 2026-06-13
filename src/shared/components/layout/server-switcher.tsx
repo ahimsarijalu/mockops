@@ -6,6 +6,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -44,30 +45,32 @@ export function ServerSwitcher() {
         }
       />
       <DropdownMenuContent align="start" className="w-64">
-        <DropdownMenuGroupLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-          Servers
-        </DropdownMenuGroupLabel>
-        {servers.length === 0 && (
-          <div className="px-2 py-1.5 text-sm text-muted-foreground">No servers configured</div>
-        )}
-        {servers.map((server) => (
-          <DropdownMenuItem key={server.id} onClick={() => setActiveServer(server.id)}>
-            <span
-              className={cn(
-                'size-2 shrink-0 rounded-full',
-                server.lastConnectionStatus === 'online'
-                  ? 'bg-success'
-                  : server.lastConnectionStatus === 'offline'
-                    ? 'bg-destructive'
-                    : 'bg-muted-foreground',
-              )}
-            />
-            <span className="flex-1 truncate">{server.name}</span>
-            <Badge variant="outline" className="text-[10px]">
-              {server.environment}
-            </Badge>
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuGroupLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+            Servers
+          </DropdownMenuGroupLabel>
+          {servers.length === 0 && (
+            <div className="px-2 py-1.5 text-sm text-muted-foreground">No servers configured</div>
+          )}
+          {servers.map((server) => (
+            <DropdownMenuItem key={server.id} onClick={() => setActiveServer(server.id)}>
+              <span
+                className={cn(
+                  'size-2 shrink-0 rounded-full',
+                  server.lastConnectionStatus === 'online'
+                    ? 'bg-success'
+                    : server.lastConnectionStatus === 'offline'
+                      ? 'bg-destructive'
+                      : 'bg-muted-foreground',
+                )}
+              />
+              <span className="flex-1 truncate">{server.name}</span>
+              <Badge variant="outline" className="text-[10px]">
+                {server.environment}
+              </Badge>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link to="/servers" />}>
           <PlusIcon className="size-4" />
