@@ -1,0 +1,14 @@
+services:
+  mockops:
+    build: .
+    ports:
+      - '8080:8080'
+    restart: unless-stopped
+
+  # Optional local WireMock instance for development/testing the console against.
+  wiremock:
+    image: wiremock/wiremock:3.13.1
+    command: ['--global-response-templating', '--verbose']
+    ports:
+      - '8081:8080'
+    restart: unless-stopped

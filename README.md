@@ -75,7 +75,13 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
   editing, global response settings (delay distribution, proxy pass-through),
   server actions (save/reset), console theme preferences, and a searchable
   local audit log.
-- **Phase 8 — Testing, accessibility polish, Docker/Nginx/Kubernetes/Helm/CI**.
+- **Phase 8 — Testing, accessibility polish, Docker/Nginx/Kubernetes/Helm/CI** ✅
+  additional unit test coverage for scenario transitions, request journal
+  helpers, and the file tree; an audited pass for icon-button labeling and
+  keyboard/aria affordances; a multi-stage Docker build served via Nginx with
+  security headers and SPA routing; Kubernetes manifests and a Helm chart for
+  deployment; and a GitHub Actions CI pipeline (type-check, lint, test, build,
+  Docker build).
 
 ## Multi-server support
 
@@ -83,3 +89,26 @@ Servers are stored locally (Zustand + localStorage) with environment tagging
 (development, qa, sit, uat, production-like, local), `none`/`basic`/`bearer`
 auth, health polling, and last-connection tracking. Switch the active server
 from the header to retarget every feature.
+
+## Deployment
+
+MockOps is a static single-page app — it can be served by any static file
+host or web server. A reference Nginx-based setup is provided:
+
+```bash
+# Build and run locally with Docker
+docker compose up --build
+# App available at http://localhost:8080
+```
+
+For Kubernetes, apply the manifests in `k8s/` (via `kubectl apply -k k8s/`)
+or install the Helm chart in `helm/mockops`:
+
+```bash
+helm install mockops ./helm/mockops \
+  --set image.repository=ghcr.io/ahimsarijalu/mockops \
+  --set image.tag=latest
+```
+
+CI (`.github/workflows/ci.yml`) runs type-checking, linting, unit tests, the
+production build, and a Docker build on every push and pull request.
