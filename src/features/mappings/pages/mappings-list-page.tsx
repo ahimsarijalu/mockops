@@ -1,7 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { PlusIcon, SearchIcon, ServerIcon, RefreshCwIcon } from 'lucide-react'
+import {
+  PlusIcon,
+  SearchIcon,
+  ServerIcon,
+  RefreshCwIcon,
+  DownloadIcon,
+  UploadIcon,
+} from 'lucide-react'
 import type { RowSelectionState } from '@tanstack/react-table'
+import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
@@ -21,6 +29,7 @@ import {
   useDeleteMapping,
   useBulkDeleteMappings,
   useSetMappingDisabled,
+  useImportMappings,
 } from '../api/use-mappings'
 import { MappingsTable } from '../components/mappings-table'
 import { MappingsBulkToolbar } from '../components/mappings-bulk-toolbar'
@@ -34,11 +43,13 @@ export function MappingsListPage() {
   const deleteMapping = useDeleteMapping(server)
   const bulkDeleteMappings = useBulkDeleteMappings(server)
   const setDisabled = useSetMappingDisabled(server)
+  const importMappings = useImportMappings(server)
 
   const [search, setSearch] = useState('')
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [deletingMapping, setDeletingMapping] = useState<StubMapping | undefined>(undefined)
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   const mappings = useMemo(() => data?.mappings ?? [], [data])
 
@@ -82,6 +93,35 @@ export function MappingsListPage() {
     })
   }
 
+  const handleExport = () => {
+    const toExport = selectedMappings.length > 0 ? selectedMappings : filtered
+    const blob = new Blob([JSON.stringify({ mappings: toExport }, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mockops-mappings-${server.name.replace(/\s+/g, '-').toLowerCase()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as unknown
+      const mappings = Array.isArray(parsed)
+        ? parsed
+        : (parsed as { mappings?: unknown[] }).mappings
+      if (!Array.isArray(mappings)) {
+        throw new Error('Expected an array of mappings or an object with a "mappings" array')
+      }
+      importMappings.mutate(mappings as StubMapping[])
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to parse import file')
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -96,6 +136,25 @@ export function MappingsListPage() {
             <RefreshCwIcon className={isFetching ? 'size-4 animate-spin' : 'size-4'} />
             Refresh
           </Button>
+          <Button variant="outline" onClick={handleExport} disabled={filtered.length === 0}>
+            <DownloadIcon className="size-4" />
+            Export{selectedMappings.length > 0 ? ` (${selectedMappings.length})` : ''}
+          </Button>
+          <Button variant="outline" onClick={() => importInputRef.current?.click()}>
+            <UploadIcon className="size-4" />
+            Import
+          </Button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void handleImportFile(file)
+              e.target.value = ''
+            }}
+          />
           <Link to="/mappings/new" className={buttonVariants()}>
             <PlusIcon className="size-4" />
             New mapping

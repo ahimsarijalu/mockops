@@ -114,6 +114,27 @@ export function useBulkDeleteMappings(server: ServerConfig | null) {
   })
 }
 
+export function useImportMappings(server: ServerConfig | null) {
+  const queryClient = useQueryClient()
+  const logAction = useAuditStore((s) => s.log)
+  return useMutation({
+    mutationFn: async (mappings: StubMapping[]) => {
+      if (!server) throw new Error('No server configured')
+      const client = new WireMockClient(server)
+      await client.mappings.importMappings(mappings)
+      return mappings
+    },
+    onSuccess: (mappings) => {
+      queryClient.invalidateQueries({ queryKey: mappingsKey(server) })
+      logAction({ action: 'Imported Mappings', target: `${mappings.length} mapping(s)` })
+      toast.success(`Imported ${mappings.length} mapping(s)`)
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to import mappings')
+    },
+  })
+}
+
 export function useSetMappingDisabled(server: ServerConfig | null) {
   const queryClient = useQueryClient()
   const logAction = useAuditStore((s) => s.log)

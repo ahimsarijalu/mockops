@@ -70,7 +70,11 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
 - **Phase 6 — Scenarios & recordings** ✅ scenario state view with reset/set
   state controls and derived transition graphs, plus recording start/stop/
   snapshot with captured-mapping review.
-- **Phase 7 — Import/export, bulk ops, metadata/tags, settings, audit log**.
+- **Phase 7 — Import/export, bulk ops, metadata/tags, settings, audit log** ✅
+  mapping JSON import/export, bulk enable/disable/delete, tag-based metadata
+  editing, global response settings (delay distribution, proxy pass-through),
+  server actions (save/reset), console theme preferences, and a searchable
+  local audit log.
 - **Phase 8 — Testing, accessibility polish, Docker/Nginx/Kubernetes/Helm/CI**.
 
 ## Multi-server support
