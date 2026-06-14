@@ -1,0 +1,9 @@
+apiVersion: v2
+name: mockops
+description: A production-grade WireMock API Management Console
+type: application
+version: 0.1.0
+appVersion: '0.1.0'
+home: https://github.com/ahimsarijalu/mockops
+maintainers:
+  - name: ahimsarijalu
