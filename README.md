@@ -101,6 +101,23 @@ docker compose up --build
 # App available at http://localhost:8080
 ```
 
+### Pre-built images
+
+Images are published to GitHub Container Registry on every push to `main`
+and on tagged releases:
+
+```bash
+# Latest from main
+docker run -p 8080:8080 ghcr.io/ahimsarijalu/mockops:latest
+
+# A specific release, e.g. v1.2.3
+docker run -p 8080:8080 ghcr.io/ahimsarijalu/mockops:1.2.3
+```
+
+Available tags follow [Semantic Versioning](https://semver.org/):
+`latest`, `<major>.<minor>.<patch>`, `<major>.<minor>`, and `<major>` (e.g.
+`1`, `1.2`, `1.2.3`).
+
 For Kubernetes, apply the manifests in `k8s/` (via `kubectl apply -k k8s/`)
 or install the Helm chart in `helm/mockops`:
 
