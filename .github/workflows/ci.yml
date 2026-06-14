@@ -18,6 +18,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Generate route tree
+        run: npm run generate-routes
+
       - name: Type check
         run: npx tsc -b --noEmit
 
