@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Dialog as BaseDialog } from '@base-ui-components/react/dialog'
+import { Dialog as BaseDialog } from '@base-ui/react/dialog'
 import { SearchIcon } from 'lucide-react'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { navItems } from './nav-items'

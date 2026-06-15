@@ -1,4 +1,4 @@
-import { Tooltip as BaseTooltip } from '@base-ui-components/react/tooltip'
+import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
 import { cn } from '@/shared/lib/utils'
 
 export const TooltipProvider = BaseTooltip.Provider
