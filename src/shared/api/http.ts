@@ -13,6 +13,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * WireMock surfaces filesystem failures (e.g. a read-only or unwritable
+ * mappings/__files directory) as raw Java exception messages. Translate the
+ * common ones into something actionable, while keeping the original detail.
+ */
+export function describeWireMockError(rawMessage: string): string {
+  if (/(AccessDeniedException|FileSystemException|ReadOnlyFileSystemException)/.test(rawMessage)) {
+    return `WireMock couldn't write to its storage directory (permission denied). Check that the WireMock server has write access to its mappings/__files directory, or disable "Persistent" before saving. (${rawMessage})`
+  }
+  return rawMessage
+}
+
 export function createHttpClient(server: ServerConfig): AxiosInstance {
   const instance = axios.create({
     baseURL: server.baseUrl.replace(/\/+$/, ''),
@@ -46,7 +58,7 @@ export function createHttpClient(server: ServerConfig): AxiosInstance {
         }
         return Promise.reject(
           new ApiError(
-            error.response.data?.message ?? error.message,
+            describeWireMockError(error.response.data?.message ?? error.message),
             'http',
             error.response.status,
           ),
