@@ -15,6 +15,8 @@ spec:
       labels:
         app.kubernetes.io/name: mockops
     spec:
+      securityContext:
+        fsGroup: 101
       containers:
         - name: mockops
           image: ghcr.io/ahimsarijalu/mockops:latest

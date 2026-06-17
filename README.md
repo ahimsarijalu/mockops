@@ -118,6 +118,20 @@ Available tags follow [Semantic Versioning](https://semver.org/):
 `latest`, `<major>.<minor>.<patch>`, `<major>.<minor>`, and `<major>` (e.g.
 `1`, `1.2`, `1.2.3`).
 
+To run the container hardened (non-root, read-only root filesystem), nginx
+needs writable `tmpfs` mounts for its cache/run/temp directories — the image
+runs as the `nginx` user (uid/gid `101`):
+
+```bash
+docker run -p 8080:8080 \
+  --read-only --user 101:101 \
+  --tmpfs /var/cache/nginx --tmpfs /var/run --tmpfs /tmp \
+  ghcr.io/ahimsarijalu/mockops:latest
+```
+
+The Kubernetes manifests and Helm chart below already configure the
+equivalent (`emptyDir` volumes + `fsGroup: 101`).
+
 For Kubernetes, apply the manifests in `k8s/` (via `kubectl apply -k k8s/`)
 or install the Helm chart in `helm/mockops`:
 
