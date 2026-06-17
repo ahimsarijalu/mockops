@@ -1,5 +1,6 @@
 import Editor, { type OnMount } from '@monaco-editor/react'
 import { useUiStore } from '@/shared/stores/ui-store'
+import '@/shared/lib/monaco-setup'
 
 interface MonacoJsonEditorProps {
   value: string

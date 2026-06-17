@@ -1,5 +1,6 @@
 import { DiffEditor, type DiffOnMount } from '@monaco-editor/react'
 import { useUiStore } from '@/shared/stores/ui-store'
+import '@/shared/lib/monaco-setup'
 
 interface MonacoDiffEditorProps {
   original: string
