@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import {
   CheckCircle2Icon,
@@ -41,13 +42,17 @@ export function ServerCard({
 
   const status = isFetching ? 'unknown' : health?.online ? 'online' : 'offline'
 
-  if (health && health.online !== (server.lastConnectionStatus === 'online')) {
-    updateServer(server.id, {
-      lastConnectionStatus: health.online ? 'online' : 'offline',
-      lastConnectionAt: new Date().toISOString(),
-      version: health.version ?? server.version,
-    })
-  }
+  // Persist the latest health result to the server store as a side effect,
+  // never during render, to avoid write-during-render store updates.
+  useEffect(() => {
+    if (health && health.online !== (server.lastConnectionStatus === 'online')) {
+      updateServer(server.id, {
+        lastConnectionStatus: health.online ? 'online' : 'offline',
+        lastConnectionAt: new Date().toISOString(),
+        version: health.version ?? server.version,
+      })
+    }
+  }, [health, server.id, server.lastConnectionStatus, server.version, updateServer])
 
   return (
     <Card className={cn(isActive && 'ring-2 ring-primary')}>

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   ListTreeIcon,
@@ -19,11 +20,19 @@ import {
   CardDescription,
 } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
+import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import { useDashboardMetrics } from '../api/use-dashboard-metrics'
 import { StatCard } from '../components/stat-card'
-import { RequestVolumeChart } from '../components/request-volume-chart'
-import { StubCompositionChart } from '../components/stub-composition-chart'
+
+// Recharts is heavy (~110KB gzip) and only used on this page; lazy-load the
+// chart components so the charting library stays out of the eager app bundle.
+const RequestVolumeChart = lazy(() =>
+  import('../components/request-volume-chart').then((m) => ({ default: m.RequestVolumeChart })),
+)
+const StubCompositionChart = lazy(() =>
+  import('../components/stub-composition-chart').then((m) => ({ default: m.StubCompositionChart })),
+)
 
 export function DashboardPage() {
   const server = useActiveServer()
@@ -127,8 +136,19 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {metrics && <RequestVolumeChart events={metrics.recentRequests} />}
-        {metrics && <StubCompositionChart metrics={metrics} />}
+        {metrics && (
+          <Suspense
+            fallback={
+              <>
+                <Skeleton className="col-span-full h-72 lg:col-span-2" />
+                <Skeleton className="col-span-full h-72 lg:col-span-1" />
+              </>
+            }
+          >
+            <RequestVolumeChart events={metrics.recentRequests} />
+            <StubCompositionChart metrics={metrics} />
+          </Suspense>
+        )}
       </div>
 
       <Card>

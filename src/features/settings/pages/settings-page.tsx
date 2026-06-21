@@ -46,7 +46,7 @@ export function SettingsPage() {
   const theme = useUiStore((s) => s.theme)
   const setTheme = useUiStore((s) => s.setTheme)
 
-  const { data, isLoading } = useGlobalSettings(server)
+  const { data, isLoading, error } = useGlobalSettings(server)
   const updateSettings = useUpdateGlobalSettings(server)
   const persistMappings = usePersistMappings(server)
   const resetToDefault = useResetMappingsToDefault(server)
@@ -157,6 +157,10 @@ export function SettingsPage() {
             <div className="space-y-2">
               <Skeleton className="h-9 w-full" />
               <Skeleton className="h-9 w-full" />
+            </div>
+          ) : error ? (
+            <div className="rounded-md border border-destructive/50 p-4 text-sm text-destructive">
+              {error instanceof Error ? error.message : 'Failed to load global settings'}
             </div>
           ) : (
             <>

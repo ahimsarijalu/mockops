@@ -4,6 +4,7 @@ import { WireMockClient } from '@/shared/api/wiremock-client'
 import type { ServerConfig } from '@/features/servers/types/server'
 import type { RecordingStartRequest } from '@/shared/types/wiremock'
 import { useAuditStore } from '@/features/audit/store/audit-store'
+import { mappingsKey } from '@/features/mappings/api/use-mappings'
 
 const recordingStatusKey = (server: ServerConfig | null) => [
   'recording-status',
@@ -55,7 +56,7 @@ export function useStopRecording(server: ServerConfig | null) {
     },
     onSuccess: (mappings) => {
       queryClient.invalidateQueries({ queryKey: recordingStatusKey(server) })
-      queryClient.invalidateQueries({ queryKey: ['mappings', server?.id, server?.baseUrl] })
+      queryClient.invalidateQueries({ queryKey: mappingsKey(server) })
       logAction({
         action: 'Stopped Recording',
         target: `${mappings.length} mapping${mappings.length === 1 ? '' : 's'} captured`,
@@ -78,7 +79,7 @@ export function useSnapshotRecording(server: ServerConfig | null) {
       return client.recordings.snapshot(request)
     },
     onSuccess: (mappings) => {
-      queryClient.invalidateQueries({ queryKey: ['mappings', server?.id, server?.baseUrl] })
+      queryClient.invalidateQueries({ queryKey: mappingsKey(server) })
       logAction({
         action: 'Took Snapshot',
         target: `${mappings.length} mapping${mappings.length === 1 ? '' : 's'} captured`,

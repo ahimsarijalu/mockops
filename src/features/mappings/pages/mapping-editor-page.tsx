@@ -39,7 +39,7 @@ export function MappingEditorPage() {
   const server = useActiveServer()
   const navigate = useNavigate()
   const isNew = !mappingId
-  const { data: existingMapping, isLoading } = useMapping(server, mappingId)
+  const { data: existingMapping, isLoading, error } = useMapping(server, mappingId)
   const createMapping = useCreateMapping(server)
   const updateMapping = useUpdateMapping(server)
 
@@ -122,6 +122,19 @@ export function MappingEditorPage() {
       <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
+
+  if (!isNew && error) {
+    return (
+      <div className="space-y-4">
+        <Link to="/mappings" className={buttonVariants({ variant: 'ghost', size: 'icon' })}>
+          <ArrowLeftIcon className="size-4" />
+        </Link>
+        <div className="rounded-md border border-destructive/50 p-4 text-sm text-destructive">
+          {error instanceof Error ? error.message : 'Failed to load mapping'}
+        </div>
       </div>
     )
   }

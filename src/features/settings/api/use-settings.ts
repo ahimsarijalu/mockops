@@ -4,6 +4,7 @@ import { WireMockClient } from '@/shared/api/wiremock-client'
 import type { ServerConfig } from '@/features/servers/types/server'
 import type { WireMockSettings } from '@/shared/types/wiremock'
 import { useAuditStore } from '@/features/audit/store/audit-store'
+import { mappingsKey } from '@/features/mappings/api/use-mappings'
 
 const settingsKey = (server: ServerConfig | null) => ['settings', server?.id, server?.baseUrl]
 
@@ -68,7 +69,7 @@ export function useResetMappingsToDefault(server: ServerConfig | null) {
       await client.mappings.resetToDefault()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mappings', server?.id, server?.baseUrl] })
+      queryClient.invalidateQueries({ queryKey: mappingsKey(server) })
       logAction({ action: 'Reset Mappings to Default', target: server?.name ?? 'server' })
       toast.success('Mappings reset to default')
     },
@@ -88,7 +89,11 @@ export function useResetServerState(server: ServerConfig | null) {
       await client.system.resetAll()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries()
+      // Every query key is scoped with the server id, so only refetch queries
+      // belonging to the server being reset rather than churning every server.
+      queryClient.invalidateQueries({
+        predicate: (query) => !!server && query.queryKey.includes(server.id),
+      })
       logAction({ action: 'Reset Server State', target: server?.name ?? 'server' })
       toast.success('Server state reset')
     },
