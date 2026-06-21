@@ -5,7 +5,11 @@ import type { ServerConfig } from '@/features/servers/types/server'
 import type { StubMapping } from '@/shared/types/wiremock'
 import { useAuditStore } from '@/features/audit/store/audit-store'
 
-const mappingsKey = (server: ServerConfig | null) => ['mappings', server?.id, server?.baseUrl]
+export const mappingsKey = (server: ServerConfig | null) => [
+  'mappings',
+  server?.id,
+  server?.baseUrl,
+]
 
 export function useMappings(server: ServerConfig | null) {
   return useQuery({
