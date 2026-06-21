@@ -36,12 +36,12 @@ export function RequestMatcherForm({ request, onChange }: RequestMatcherFormProp
     <div className="space-y-4">
       <div className="grid grid-cols-[140px_140px_1fr] gap-2">
         <div className="grid gap-1.5">
-          <Label>Method</Label>
+          <Label htmlFor="matcher-method">Method</Label>
           <Select
             value={request.method ?? 'ANY'}
             onValueChange={(method) => onChange({ ...request, method: method ?? undefined })}
           >
-            <SelectTrigger>
+            <SelectTrigger id="matcher-method">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -54,12 +54,12 @@ export function RequestMatcherForm({ request, onChange }: RequestMatcherFormProp
           </Select>
         </div>
         <div className="grid gap-1.5">
-          <Label>URL match type</Label>
+          <Label htmlFor="matcher-url-type">URL match type</Label>
           <Select
             value={urlMatchType}
             onValueChange={(type) => setUrlMatch(type as UrlMatchType, urlValue)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="matcher-url-type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -72,8 +72,9 @@ export function RequestMatcherForm({ request, onChange }: RequestMatcherFormProp
           </Select>
         </div>
         <div className="grid gap-1.5">
-          <Label>URL</Label>
+          <Label htmlFor="matcher-url">URL</Label>
           <Input
+            id="matcher-url"
             value={urlValue}
             onChange={(e) => setUrlMatch(urlMatchType as UrlMatchType, e.target.value)}
             placeholder="/api/users/[0-9]+"
@@ -122,8 +123,9 @@ export function RequestMatcherForm({ request, onChange }: RequestMatcherFormProp
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-1.5">
-          <Label>Basic auth username</Label>
+          <Label htmlFor="matcher-basic-auth-username">Basic auth username</Label>
           <Input
+            id="matcher-basic-auth-username"
             value={request.basicAuthCredentials?.username ?? ''}
             onChange={(e) =>
               onChange({
@@ -137,8 +139,9 @@ export function RequestMatcherForm({ request, onChange }: RequestMatcherFormProp
           />
         </div>
         <div className="grid gap-1.5">
-          <Label>Basic auth password</Label>
+          <Label htmlFor="matcher-basic-auth-password">Basic auth password</Label>
           <Input
+            id="matcher-basic-auth-password"
             type="password"
             value={request.basicAuthCredentials?.password ?? ''}
             onChange={(e) =>

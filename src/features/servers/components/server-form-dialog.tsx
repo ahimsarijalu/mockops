@@ -88,43 +88,53 @@ export function ServerFormDialog({ open, onOpenChange, server }: ServerFormDialo
           }}
         >
           <form.Field name="name">
-            {(field) => (
-              <div className="grid gap-1.5">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  placeholder="e.g. QA Mock Server"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-xs text-destructive">
-                    {field.state.meta.errors.map((e) => e?.message).join(', ')}
-                  </p>
-                )}
-              </div>
-            )}
+            {(field) => {
+              const hasError = field.state.meta.errors.length > 0
+              return (
+                <div className="grid gap-1.5">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    placeholder="e.g. QA Mock Server"
+                    aria-invalid={hasError || undefined}
+                    aria-describedby={hasError ? 'name-error' : undefined}
+                  />
+                  {hasError && (
+                    <p id="name-error" className="text-xs text-destructive">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </p>
+                  )}
+                </div>
+              )
+            }}
           </form.Field>
 
           <form.Field name="baseUrl">
-            {(field) => (
-              <div className="grid gap-1.5">
-                <Label htmlFor="baseUrl">Base URL</Label>
-                <Input
-                  id="baseUrl"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  placeholder="http://localhost:8080"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-xs text-destructive">
-                    {field.state.meta.errors.map((e) => e?.message).join(', ')}
-                  </p>
-                )}
-              </div>
-            )}
+            {(field) => {
+              const hasError = field.state.meta.errors.length > 0
+              return (
+                <div className="grid gap-1.5">
+                  <Label htmlFor="baseUrl">Base URL</Label>
+                  <Input
+                    id="baseUrl"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    placeholder="http://localhost:8080"
+                    aria-invalid={hasError || undefined}
+                    aria-describedby={hasError ? 'baseUrl-error' : undefined}
+                  />
+                  {hasError && (
+                    <p id="baseUrl-error" className="text-xs text-destructive">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </p>
+                  )}
+                </div>
+              )
+            }}
           </form.Field>
 
           <form.Field name="environment">
@@ -180,54 +190,74 @@ export function ServerFormDialog({ open, onOpenChange, server }: ServerFormDialo
               authType === 'basic' ? (
                 <div className="grid grid-cols-2 gap-4">
                   <form.Field name="username">
-                    {(field) => (
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="username">Username</Label>
-                        <Input
-                          id="username"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                        />
-                        {field.state.meta.errors.length > 0 && (
-                          <p className="text-xs text-destructive">
-                            {field.state.meta.errors.map((e) => e?.message).join(', ')}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    {(field) => {
+                      const hasError = field.state.meta.errors.length > 0
+                      return (
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="username">Username</Label>
+                          <Input
+                            id="username"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            aria-invalid={hasError || undefined}
+                            aria-describedby={hasError ? 'username-error' : undefined}
+                          />
+                          {hasError && (
+                            <p id="username-error" className="text-xs text-destructive">
+                              {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    }}
                   </form.Field>
                   <form.Field name="password">
-                    {(field) => (
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                        />
-                      </div>
-                    )}
+                    {(field) => {
+                      const hasError = field.state.meta.errors.length > 0
+                      return (
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="password">Password</Label>
+                          <Input
+                            id="password"
+                            type="password"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            aria-invalid={hasError || undefined}
+                            aria-describedby={hasError ? 'password-error' : undefined}
+                          />
+                          {hasError && (
+                            <p id="password-error" className="text-xs text-destructive">
+                              {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    }}
                   </form.Field>
                 </div>
               ) : authType === 'bearer' ? (
                 <form.Field name="token">
-                  {(field) => (
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="token">Bearer token</Label>
-                      <Input
-                        id="token"
-                        type="password"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
-                      {field.state.meta.errors.length > 0 && (
-                        <p className="text-xs text-destructive">
-                          {field.state.meta.errors.map((e) => e?.message).join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  {(field) => {
+                    const hasError = field.state.meta.errors.length > 0
+                    return (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="token">Bearer token</Label>
+                        <Input
+                          id="token"
+                          type="password"
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={hasError || undefined}
+                          aria-describedby={hasError ? 'token-error' : undefined}
+                        />
+                        {hasError && (
+                          <p id="token-error" className="text-xs text-destructive">
+                            {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  }}
                 </form.Field>
               ) : null
             }

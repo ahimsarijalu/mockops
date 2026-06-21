@@ -38,8 +38,9 @@ export function MappingMetadataForm({
   return (
     <div className="space-y-4">
       <div className="grid gap-1.5">
-        <Label>Tags (comma separated)</Label>
+        <Label htmlFor="mapping-tags">Tags (comma separated)</Label>
         <Input
+          id="mapping-tags"
           value={tags.join(', ')}
           onChange={(e) => setTags(e.target.value)}
           placeholder="team-checkout, deprecated"

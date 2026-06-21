@@ -179,16 +179,18 @@ export function MappingEditorPage() {
 
       <div className="grid grid-cols-1 gap-4 rounded-md border border-border p-4 sm:grid-cols-4">
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label>Name</Label>
+          <Label htmlFor="mapping-name">Name</Label>
           <Input
+            id="mapping-name"
             value={mapping.name ?? ''}
             onChange={(e) => updateMappingState({ ...mapping, name: e.target.value || undefined })}
             placeholder="Get user by id"
           />
         </div>
         <div className="grid gap-1.5">
-          <Label>Priority</Label>
+          <Label htmlFor="mapping-priority">Priority</Label>
           <Input
+            id="mapping-priority"
             type="number"
             value={mapping.priority ?? ''}
             onChange={(e) =>
@@ -201,17 +203,21 @@ export function MappingEditorPage() {
         </div>
         <div className="flex items-center gap-2 self-end pb-1">
           <Switch
+            id="mapping-persistent"
             checked={mapping.persistent ?? true}
             onCheckedChange={(checked) => updateMappingState({ ...mapping, persistent: checked })}
           />
-          <Label className="cursor-pointer">Persistent</Label>
+          <Label htmlFor="mapping-persistent" className="cursor-pointer">
+            Persistent
+          </Label>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 rounded-md border border-border p-4 sm:grid-cols-3">
         <div className="grid gap-1.5">
-          <Label>Scenario name</Label>
+          <Label htmlFor="mapping-scenario-name">Scenario name</Label>
           <Input
+            id="mapping-scenario-name"
             value={mapping.scenarioName ?? ''}
             onChange={(e) =>
               updateMappingState({ ...mapping, scenarioName: e.target.value || undefined })
@@ -219,8 +225,9 @@ export function MappingEditorPage() {
           />
         </div>
         <div className="grid gap-1.5">
-          <Label>Required scenario state</Label>
+          <Label htmlFor="mapping-required-scenario-state">Required scenario state</Label>
           <Input
+            id="mapping-required-scenario-state"
             value={mapping.requiredScenarioState ?? ''}
             onChange={(e) =>
               updateMappingState({
@@ -231,8 +238,9 @@ export function MappingEditorPage() {
           />
         </div>
         <div className="grid gap-1.5">
-          <Label>New scenario state</Label>
+          <Label htmlFor="mapping-new-scenario-state">New scenario state</Label>
           <Input
+            id="mapping-new-scenario-state"
             value={mapping.newScenarioState ?? ''}
             onChange={(e) =>
               updateMappingState({ ...mapping, newScenarioState: e.target.value || undefined })

@@ -106,16 +106,23 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">
         <div className="grid gap-1.5">
-          <Label>Status code</Label>
+          <Label htmlFor="response-status">Status code</Label>
           <Input
+            id="response-status"
             type="number"
             value={response.status ?? 200}
-            onChange={(e) => onChange({ ...response, status: Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({
+                ...response,
+                status: e.target.value ? Number(e.target.value) : response.status,
+              })
+            }
           />
         </div>
         <div className="grid gap-1.5 col-span-2">
-          <Label>Status message</Label>
+          <Label htmlFor="response-status-message">Status message</Label>
           <Input
+            id="response-status-message"
             value={response.statusMessage ?? ''}
             onChange={(e) => onChange({ ...response, statusMessage: e.target.value || undefined })}
             placeholder="OK"
@@ -193,8 +200,9 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
 
       <div className="grid grid-cols-3 gap-4">
         <div className="grid gap-1.5">
-          <Label>Fixed delay (ms)</Label>
+          <Label htmlFor="response-fixed-delay">Fixed delay (ms)</Label>
           <Input
+            id="response-fixed-delay"
             type="number"
             value={response.fixedDelayMilliseconds ?? ''}
             onChange={(e) =>
@@ -206,7 +214,7 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
           />
         </div>
         <div className="grid gap-1.5">
-          <Label>Fault</Label>
+          <Label htmlFor="response-fault">Fault</Label>
           <Select
             value={response.fault ?? 'none'}
             onValueChange={(value) =>
@@ -216,7 +224,7 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
               })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="response-fault">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -230,8 +238,9 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
           </Select>
         </div>
         <div className="grid gap-1.5">
-          <Label>Proxy base URL</Label>
+          <Label htmlFor="response-proxy-base-url">Proxy base URL</Label>
           <Input
+            id="response-proxy-base-url"
             value={response.proxyBaseUrl ?? ''}
             onChange={(e) => onChange({ ...response, proxyBaseUrl: e.target.value || undefined })}
             placeholder="https://api.example.com"
@@ -262,13 +271,13 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
       )}
 
       <div className="grid gap-1.5">
-        <Label>Delay distribution</Label>
+        <Label htmlFor="response-delay-distribution">Delay distribution</Label>
         <div className="grid grid-cols-3 gap-4">
           <Select
             value={delayDistributionType}
             onValueChange={(value) => setDelayDistributionType(value as DelayDistributionType)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="response-delay-distribution">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -283,8 +292,9 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
           {delayDistributionType === 'uniform' && (
             <>
               <div className="grid gap-1.5">
-                <Label>Lower bound (ms)</Label>
+                <Label htmlFor="response-delay-lower">Lower bound (ms)</Label>
                 <Input
+                  id="response-delay-lower"
                   type="number"
                   value={response.delayDistribution?.lower ?? ''}
                   onChange={(e) =>
@@ -293,15 +303,16 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
                       delayDistribution: {
                         ...response.delayDistribution,
                         type: 'uniform',
-                        lower: Number(e.target.value),
+                        lower: e.target.value ? Number(e.target.value) : undefined,
                       },
                     })
                   }
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label>Upper bound (ms)</Label>
+                <Label htmlFor="response-delay-upper">Upper bound (ms)</Label>
                 <Input
+                  id="response-delay-upper"
                   type="number"
                   value={response.delayDistribution?.upper ?? ''}
                   onChange={(e) =>
@@ -310,7 +321,7 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
                       delayDistribution: {
                         ...response.delayDistribution,
                         type: 'uniform',
-                        upper: Number(e.target.value),
+                        upper: e.target.value ? Number(e.target.value) : undefined,
                       },
                     })
                   }
@@ -322,8 +333,9 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
           {delayDistributionType === 'lognormal' && (
             <>
               <div className="grid gap-1.5">
-                <Label>Median (ms)</Label>
+                <Label htmlFor="response-delay-median">Median (ms)</Label>
                 <Input
+                  id="response-delay-median"
                   type="number"
                   value={response.delayDistribution?.median ?? ''}
                   onChange={(e) =>
@@ -332,15 +344,16 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
                       delayDistribution: {
                         ...response.delayDistribution,
                         type: 'lognormal',
-                        median: Number(e.target.value),
+                        median: e.target.value ? Number(e.target.value) : undefined,
                       },
                     })
                   }
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label>Sigma</Label>
+                <Label htmlFor="response-delay-sigma">Sigma</Label>
                 <Input
+                  id="response-delay-sigma"
                   type="number"
                   step="0.01"
                   value={response.delayDistribution?.sigma ?? ''}
@@ -350,7 +363,7 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
                       delayDistribution: {
                         ...response.delayDistribution,
                         type: 'lognormal',
-                        sigma: Number(e.target.value),
+                        sigma: e.target.value ? Number(e.target.value) : undefined,
                       },
                     })
                   }
@@ -363,8 +376,9 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-1.5">
-          <Label>Chunked dribble delay — number of chunks</Label>
+          <Label htmlFor="response-chunked-chunks">Chunked dribble delay — number of chunks</Label>
           <Input
+            id="response-chunked-chunks"
             type="number"
             value={response.chunkedDribbleDelay?.numberOfChunks ?? ''}
             onChange={(e) => {
@@ -382,8 +396,11 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
           />
         </div>
         <div className="grid gap-1.5">
-          <Label>Chunked dribble delay — total duration (ms)</Label>
+          <Label htmlFor="response-chunked-duration">
+            Chunked dribble delay — total duration (ms)
+          </Label>
           <Input
+            id="response-chunked-duration"
             type="number"
             value={response.chunkedDribbleDelay?.totalDuration ?? ''}
             onChange={(e) => {
@@ -421,8 +438,9 @@ export function ResponseEditorForm({ response, onChange }: ResponseEditorFormPro
         </label>
 
         <div className="grid gap-1.5">
-          <Label>Additional transformers (comma separated)</Label>
+          <Label htmlFor="response-transformers">Additional transformers (comma separated)</Label>
           <Input
+            id="response-transformers"
             value={customTransformers.join(', ')}
             onChange={(e) => {
               const extra = e.target.value

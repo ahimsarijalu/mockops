@@ -118,9 +118,9 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-1.5">
-            <Label>Theme</Label>
+            <Label htmlFor="settings-theme">Theme</Label>
             <Select value={theme} onValueChange={(value) => value && setTheme(value as Theme)}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger id="settings-theme" className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -177,14 +177,14 @@ export function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Delay distribution</Label>
+                <Label htmlFor="settings-delay-distribution">Delay distribution</Label>
                 <Select
                   value={delayType}
                   onValueChange={(value) =>
                     value && setDelayType(value as 'none' | DelayDistributionType)
                   }
                 >
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger id="settings-delay-distribution" className="w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
