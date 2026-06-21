@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { ServerIcon } from 'lucide-react'
-import { Button, buttonVariants } from '@/shared/components/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   Card,
   CardContent,
@@ -29,6 +27,7 @@ import {
 } from '@/shared/components/ui/select'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Switch } from '@/shared/components/ui/switch'
+import { NoActiveServerState } from '@/shared/components/feedback/no-active-server-state'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import { useUiStore, type Theme } from '@/shared/stores/ui-store'
 import {
@@ -78,18 +77,7 @@ export function SettingsPage() {
 
   if (!server) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-16 text-center">
-        <ServerIcon className="size-10 text-muted-foreground" />
-        <div>
-          <p className="font-medium">No active server</p>
-          <p className="text-sm text-muted-foreground">
-            Add and select a WireMock server to manage settings.
-          </p>
-        </div>
-        <Link to="/servers" className={buttonVariants()}>
-          Go to Servers
-        </Link>
-      </div>
+      <NoActiveServerState description="Add and select a WireMock server to manage settings." />
     )
   }
 

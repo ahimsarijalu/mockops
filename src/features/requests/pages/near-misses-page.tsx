@@ -1,7 +1,7 @@
-import { Link } from '@tanstack/react-router'
-import { RefreshCwIcon, ServerIcon } from 'lucide-react'
-import { Button, buttonVariants } from '@/shared/components/ui/button'
+import { RefreshCwIcon } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { NoActiveServerState } from '@/shared/components/feedback/no-active-server-state'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import { useNearMisses } from '../api/use-requests'
 import { NearMissCard } from '../components/near-miss-card'
@@ -14,18 +14,7 @@ export function NearMissesPage() {
 
   if (!server) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-16 text-center">
-        <ServerIcon className="size-10 text-muted-foreground" />
-        <div>
-          <p className="font-medium">No active server</p>
-          <p className="text-sm text-muted-foreground">
-            Add and select a WireMock server to view near misses.
-          </p>
-        </div>
-        <Link to="/servers" className={buttonVariants()}>
-          Go to Servers
-        </Link>
-      </div>
+      <NoActiveServerState description="Add and select a WireMock server to view near misses." />
     )
   }
 

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import { MethodBadge } from '@/shared/components/ui/method-badge'
 import {
   Table,
   TableHeader,
@@ -27,7 +28,7 @@ import {
   TableHead,
   TableCell,
 } from '@/shared/components/ui/table'
-import { cn } from '@/shared/lib/utils'
+import { getVirtualRowPadding } from '@/shared/lib/virtual-padding'
 import type { StubMapping } from '@/shared/types/wiremock'
 import {
   getMappingKind,
@@ -44,14 +45,6 @@ interface MappingsTableProps {
   onDuplicate: (mapping: StubMapping) => void
   onDelete: (mapping: StubMapping) => void
   onToggleDisabled: (mapping: StubMapping) => void
-}
-
-const methodColors: Record<string, string> = {
-  GET: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  POST: 'bg-green-500/15 text-green-600 dark:text-green-400',
-  PUT: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  PATCH: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
-  DELETE: 'bg-red-500/15 text-red-600 dark:text-red-400',
 }
 
 export function MappingsTable({
@@ -133,19 +126,7 @@ export function MappingsTable({
     {
       id: 'method',
       header: 'Method',
-      cell: ({ row }) => {
-        const method = row.original.request.method ?? 'ANY'
-        return (
-          <span
-            className={cn(
-              'inline-flex rounded px-1.5 py-0.5 text-xs font-mono font-semibold',
-              methodColors[method] ?? 'bg-muted text-muted-foreground',
-            )}
-          >
-            {method}
-          </span>
-        )
-      },
+      cell: ({ row }) => <MethodBadge method={row.original.request.method ?? 'ANY'} />,
     },
     {
       id: 'url',
@@ -239,11 +220,7 @@ export function MappingsTable({
   })
 
   const virtualRows = virtualizer.getVirtualItems()
-  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0
-  const paddingBottom =
-    virtualRows.length > 0
-      ? virtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
-      : 0
+  const { paddingTop, paddingBottom } = getVirtualRowPadding(virtualizer, virtualRows)
 
   return (
     <div ref={parentRef} className="max-h-[70vh] overflow-auto rounded-md border border-border">

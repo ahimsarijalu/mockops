@@ -34,6 +34,9 @@ export function CommandPalette() {
     setOpen(false)
   }
 
+  const activeOptionId =
+    results.length > 0 ? `command-palette-option-${results[highlighted]?.to}` : undefined
+
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
     if (!next) {
@@ -51,6 +54,10 @@ export function CommandPalette() {
             <SearchIcon className="size-4 text-muted-foreground" />
             <input
               autoFocus
+              role="combobox"
+              aria-expanded
+              aria-controls="command-palette-listbox"
+              aria-activedescendant={activeOptionId}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)
@@ -71,14 +78,19 @@ export function CommandPalette() {
               className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
-          <ul className="max-h-72 overflow-y-auto p-2">
+          <ul id="command-palette-listbox" role="listbox" className="max-h-72 overflow-y-auto p-2">
             {results.length === 0 && (
               <li className="px-2 py-6 text-center text-sm text-muted-foreground">
                 No results found
               </li>
             )}
             {results.map((item, index) => (
-              <li key={item.to}>
+              <li
+                key={item.to}
+                id={`command-palette-option-${item.to}`}
+                role="option"
+                aria-selected={index === highlighted}
+              >
                 <button
                   type="button"
                   onClick={() => select(item.to)}

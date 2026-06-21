@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { PlusIcon, RefreshCwIcon, SearchIcon, ServerIcon, FolderTreeIcon } from 'lucide-react'
-import { Button, buttonVariants } from '@/shared/components/ui/button'
+import { PlusIcon, RefreshCwIcon, SearchIcon, FolderTreeIcon } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Link } from '@tanstack/react-router'
+import { NoActiveServerState } from '@/shared/components/feedback/no-active-server-state'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import { useMappings } from '@/features/mappings/api/use-mappings'
 import { useFiles, useSaveFile } from '../api/use-files'
@@ -37,20 +37,7 @@ export function FilesPage() {
   }, [mappingsData, selectedPath])
 
   if (!server) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-16 text-center">
-        <ServerIcon className="size-10 text-muted-foreground" />
-        <div>
-          <p className="font-medium">No active server</p>
-          <p className="text-sm text-muted-foreground">
-            Add and select a WireMock server to manage files.
-          </p>
-        </div>
-        <Link to="/servers" className={buttonVariants()}>
-          Go to Servers
-        </Link>
-      </div>
-    )
+    return <NoActiveServerState description="Add and select a WireMock server to manage files." />
   }
 
   return (
