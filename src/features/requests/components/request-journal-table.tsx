@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import { Trash2Icon } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import { MethodBadge } from '@/shared/components/ui/method-badge'
 import {
   Table,
   TableHeader,
@@ -11,17 +12,9 @@ import {
   TableHead,
   TableCell,
 } from '@/shared/components/ui/table'
-import { cn } from '@/shared/lib/utils'
+import { getVirtualRowPadding } from '@/shared/lib/virtual-padding'
 import type { ServeEvent } from '@/shared/types/wiremock'
 import { getStatusBadgeVariant } from '../utils/request-helpers'
-
-const methodColors: Record<string, string> = {
-  GET: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  POST: 'bg-green-500/15 text-green-600 dark:text-green-400',
-  PUT: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  PATCH: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
-  DELETE: 'bg-red-500/15 text-red-600 dark:text-red-400',
-}
 
 interface RequestJournalTableProps {
   events: ServeEvent[]
@@ -40,11 +33,7 @@ export function RequestJournalTable({ events, onSelect, onDelete }: RequestJourn
   })
 
   const virtualRows = virtualizer.getVirtualItems()
-  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0
-  const paddingBottom =
-    virtualRows.length > 0
-      ? virtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
-      : 0
+  const { paddingTop, paddingBottom } = getVirtualRowPadding(virtualizer, virtualRows)
 
   return (
     <div ref={parentRef} className="max-h-[70vh] overflow-auto rounded-md border border-border">
@@ -74,14 +63,7 @@ export function RequestJournalTable({ events, onSelect, onDelete }: RequestJourn
                   {event.request.loggedDateString ?? '—'}
                 </TableCell>
                 <TableCell>
-                  <span
-                    className={cn(
-                      'inline-flex rounded px-1.5 py-0.5 text-xs font-mono font-semibold',
-                      methodColors[method] ?? 'bg-muted text-muted-foreground',
-                    )}
-                  >
-                    {method}
-                  </span>
+                  <MethodBadge method={method} />
                 </TableCell>
                 <TableCell className="max-w-md truncate font-mono text-xs text-muted-foreground">
                   {event.request.url}

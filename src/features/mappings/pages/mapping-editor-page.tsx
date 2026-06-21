@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { useBlocker } from '@tanstack/react-router'
-import { ArrowLeftIcon, ServerIcon } from 'lucide-react'
+import { ArrowLeftIcon } from 'lucide-react'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
@@ -19,6 +19,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import { MonacoJsonEditor } from '@/shared/components/editor/monaco-json-editor'
 import { MonacoDiffEditor } from '@/shared/components/editor/monaco-diff-editor'
+import { NoActiveServerState } from '@/shared/components/feedback/no-active-server-state'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import { useMapping, useCreateMapping, useUpdateMapping } from '../api/use-mappings'
 import { RequestMatcherForm } from '../components/request-matcher-form'
@@ -102,18 +103,7 @@ export function MappingEditorPage() {
 
   if (!server) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-16 text-center">
-        <ServerIcon className="size-10 text-muted-foreground" />
-        <div>
-          <p className="font-medium">No active server</p>
-          <p className="text-sm text-muted-foreground">
-            Add and select a WireMock server to manage mappings.
-          </p>
-        </div>
-        <Link to="/servers" className={buttonVariants()}>
-          Go to Servers
-        </Link>
-      </div>
+      <NoActiveServerState description="Add and select a WireMock server to manage mappings." />
     )
   }
 

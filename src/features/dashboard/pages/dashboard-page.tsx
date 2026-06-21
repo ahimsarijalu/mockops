@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react'
-import { Link } from '@tanstack/react-router'
 import {
   ListTreeIcon,
   PauseCircleIcon,
@@ -9,9 +8,7 @@ import {
   HistoryIcon,
   AlertTriangleIcon,
   TargetIcon,
-  ServerIcon,
 } from 'lucide-react'
-import { buttonVariants } from '@/shared/components/ui/button'
 import {
   Card,
   CardContent,
@@ -21,6 +18,7 @@ import {
 } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { NoActiveServerState } from '@/shared/components/feedback/no-active-server-state'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import { useDashboardMetrics } from '../api/use-dashboard-metrics'
 import { StatCard } from '../components/stat-card'
@@ -40,18 +38,7 @@ export function DashboardPage() {
 
   if (!server) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-16 text-center">
-        <ServerIcon className="size-10 text-muted-foreground" />
-        <div>
-          <p className="font-medium">No active server</p>
-          <p className="text-sm text-muted-foreground">
-            Add and select a WireMock server to see live metrics.
-          </p>
-        </div>
-        <Link to="/servers" className={buttonVariants()}>
-          Go to Servers
-        </Link>
-      </div>
+      <NoActiveServerState description="Add and select a WireMock server to see live metrics." />
     )
   }
 

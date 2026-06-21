@@ -1,13 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import {
-  PlusIcon,
-  SearchIcon,
-  ServerIcon,
-  RefreshCwIcon,
-  DownloadIcon,
-  UploadIcon,
-} from 'lucide-react'
+import { PlusIcon, SearchIcon, RefreshCwIcon, DownloadIcon, UploadIcon } from 'lucide-react'
 import type { RowSelectionState } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
@@ -22,6 +15,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/shared/components/ui/dialog'
+import { NoActiveServerState } from '@/shared/components/feedback/no-active-server-state'
 import { useActiveServer } from '@/features/servers/store/server-store'
 import {
   useMappings,
@@ -68,18 +62,7 @@ export function MappingsListPage() {
 
   if (!server) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-16 text-center">
-        <ServerIcon className="size-10 text-muted-foreground" />
-        <div>
-          <p className="font-medium">No active server</p>
-          <p className="text-sm text-muted-foreground">
-            Add and select a WireMock server to manage mappings.
-          </p>
-        </div>
-        <Link to="/servers" className={buttonVariants()}>
-          Go to Servers
-        </Link>
-      </div>
+      <NoActiveServerState description="Add and select a WireMock server to manage mappings." />
     )
   }
 
