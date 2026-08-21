@@ -194,4 +194,39 @@ describe('explainMismatch', () => {
     }
     expect(explainMismatch(request({ body: 'anything' }), pattern)).toEqual([])
   })
+
+  it('requires a full-string match for "matches", like WireMock does (not a substring)', () => {
+    // WireMock (Java Pattern.matches) requires the whole body to match \d+;
+    // a JS RegExp.test substring search would wrongly accept this
+    const pattern: RequestPattern = {
+      bodyPatterns: [{ matches: '\\d+' }],
+    }
+    const mismatches = explainMismatch(request({ body: 'abc123def' }), pattern)
+    expect(mismatches).toContainEqual(expect.objectContaining({ field: 'body' }))
+  })
+
+  it('treats "doesNotMatch" as satisfied when the pattern only matches a substring', () => {
+    // \d+ is present as a substring but does not match the whole body, so
+    // WireMock considers doesNotMatch satisfied (no mismatch)
+    const pattern: RequestPattern = {
+      bodyPatterns: [{ doesNotMatch: '\\d+' }],
+    }
+    expect(explainMismatch(request({ body: 'abc123def' }), pattern)).toEqual([])
+  })
+
+  it('flags "doesNotMatch" when the pattern fully matches the body', () => {
+    const pattern: RequestPattern = {
+      bodyPatterns: [{ doesNotMatch: '\\d+' }],
+    }
+    const mismatches = explainMismatch(request({ body: '12345' }), pattern)
+    expect(mismatches).toContainEqual(expect.objectContaining({ field: 'body' }))
+  })
+
+  it('requires a full-string match for urlPathPattern', () => {
+    const pattern: RequestPattern = { urlPathPattern: '/orders/\\d+' }
+    // '/orders/42/extra' contains a substring matching the pattern but is
+    // not fully matched by it
+    const mismatches = explainMismatch(request({ url: '/orders/42/extra' }), pattern)
+    expect(mismatches.some((m) => m.label === 'URL path pattern')).toBe(true)
+  })
 })
