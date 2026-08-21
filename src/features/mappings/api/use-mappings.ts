@@ -110,12 +110,27 @@ export function useBulkDeleteMappings(server: ServerConfig | null) {
     mutationFn: async (mappings: StubMapping[]): Promise<BulkDeleteResult> => {
       if (!server) throw new Error('No server configured')
       const client = new WireMockClient(server)
-      const targets = mappings.filter((m): m is StubMapping & { id: string } => !!m.id)
-      const results = await Promise.allSettled(targets.map((m) => client.mappings.remove(m.id)))
+      // A mapping is deletable by either id or uuid (WireMock accepts
+      // either as the {id} path segment). One lacking both can't be
+      // targeted at all — report it as failed rather than silently
+      // dropping it from the batch, which would otherwise vanish from the
+      // selection without ever being deleted or counted.
       const succeeded: StubMapping[] = []
       const failed: BulkDeleteResult['failed'] = []
+      const deletable: { mapping: StubMapping; key: string }[] = []
+      for (const mapping of mappings) {
+        const key = mapping.id ?? mapping.uuid
+        if (key) {
+          deletable.push({ mapping, key })
+        } else {
+          failed.push({ mapping, error: new Error('Mapping has no id or uuid') })
+        }
+      }
+      const results = await Promise.allSettled(
+        deletable.map(({ key }) => client.mappings.remove(key)),
+      )
       results.forEach((result, index) => {
-        const mapping = targets[index]
+        const { mapping } = deletable[index]
         if (result.status === 'fulfilled') {
           succeeded.push(mapping)
         } else {

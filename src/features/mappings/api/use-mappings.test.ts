@@ -84,4 +84,48 @@ describe('useBulkDeleteMappings', () => {
     expect(result.current.data?.failed).toEqual([])
     expect(result.current.data?.succeeded).toHaveLength(2)
   })
+
+  it('deletes a mapping by uuid when it has no id', async () => {
+    let deletedPath: string | undefined
+    mswServer.use(
+      http.delete(`${BASE_URL}/__admin/mappings/:id`, ({ params }) => {
+        deletedPath = params.id as string
+        return new HttpResponse(null, { status: 200 })
+      }),
+    )
+
+    const { result } = renderHook(() => useBulkDeleteMappings(server), { wrapper: wrapper() })
+
+    const mappings: StubMapping[] = [{ uuid: 'uuid-only', request: {}, response: {} }]
+
+    result.current.mutate(mappings)
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(deletedPath).toBe('uuid-only')
+    expect(result.current.data?.succeeded).toEqual(mappings)
+    expect(result.current.data?.failed).toEqual([])
+  })
+
+  it('reports a mapping with neither id nor uuid as failed, not silently dropped', async () => {
+    const { result } = renderHook(() => useBulkDeleteMappings(server), { wrapper: wrapper() })
+
+    const mappings: StubMapping[] = [
+      { id: 'good', request: {}, response: {} },
+      { request: {}, response: {} },
+    ]
+    mswServer.use(
+      http.delete(
+        `${BASE_URL}/__admin/mappings/:id`,
+        () => new HttpResponse(null, { status: 200 }),
+      ),
+    )
+
+    result.current.mutate(mappings)
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.data?.succeeded).toEqual([mappings[0]])
+    expect(result.current.data?.failed.map(({ mapping }) => mapping)).toEqual([mappings[1]])
+  })
 })
