@@ -29,14 +29,17 @@ function testStringPattern(pattern: StringValuePattern, value: string | undefine
     try {
       return new RegExp(pattern.matches).test(v)
     } catch {
-      return false
+      // Invalid regex authored on the stub — not something the request can
+      // be blamed for. Consistent with checkUrl's handling of a bad
+      // urlPattern/urlPathPattern.
+      return true
     }
   }
   if (pattern.doesNotMatch !== undefined) {
     try {
       return !new RegExp(pattern.doesNotMatch).test(v)
     } catch {
-      return false
+      return true
     }
   }
   // Matchers we can't evaluate client-side (JSON/XPath/JSON-path/etc.) are
@@ -83,20 +86,32 @@ function checkUrl(request: LoggedRequest, pattern: RequestPattern): Mismatch | n
 }
 
 /**
- * Normalizes a raw journal value for a header/query-param/cookie into a
- * displayable string. WireMock serializes query parameters as
+ * Splits a raw journal value for a header/query-param/cookie into its
+ * individual string values. WireMock serializes query parameters as
  * `{ key, values: string[] }` objects (not a plain string or array), so
  * that shape is unwrapped in addition to the plain string/array cases.
  */
-function normalizeValue(rawActual: unknown): string | undefined {
+function getValues(rawActual: unknown): string[] | undefined {
   if (rawActual === undefined || rawActual === null) return undefined
-  if (typeof rawActual === 'string') return rawActual
-  if (Array.isArray(rawActual)) return rawActual.join(', ')
+  if (typeof rawActual === 'string') return [rawActual]
+  if (Array.isArray(rawActual)) return rawActual.map(String)
   if (typeof rawActual === 'object' && 'values' in rawActual) {
     const values = (rawActual as { values?: unknown }).values
-    if (Array.isArray(values)) return values.join(', ')
+    if (Array.isArray(values)) return values.map(String)
   }
-  return String(rawActual)
+  return [String(rawActual)]
+}
+
+/**
+ * WireMock matches a multi-valued header/query-param field when ANY one of
+ * its values satisfies the matcher, not when the values joined together do.
+ */
+function matchesAnyValue(pattern: StringValuePattern, values: string[] | undefined): boolean {
+  if (pattern.absent !== undefined) {
+    return pattern.absent ? values === undefined : values !== undefined
+  }
+  if (values === undefined) return testStringPattern(pattern, undefined)
+  return values.some((v) => testStringPattern(pattern, v))
 }
 
 function checkKeyValueMap(
@@ -116,13 +131,13 @@ function checkKeyValueMap(
     const rawActual = lowercasedActualMap
       ? lowercasedActualMap[key.toLowerCase()]
       : actualMap?.[key]
-    const actualValue = normalizeValue(rawActual)
-    if (!testStringPattern(pattern, actualValue)) {
+    const values = getValues(rawActual)
+    if (!matchesAnyValue(pattern, values)) {
       mismatches.push({
         field,
         label: `${labelPrefix} "${key}"`,
         expected: describePattern(pattern),
-        actual: actualValue ?? '(absent)',
+        actual: values?.join(', ') ?? '(absent)',
       })
     }
   }

@@ -151,4 +151,47 @@ describe('explainMismatch', () => {
     const mismatches = explainMismatch(request({ body: 'hello' }), pattern)
     expect(mismatches).toContainEqual(expect.objectContaining({ field: 'body' }))
   })
+
+  it('matches a multi-valued query param when any single value satisfies the pattern', () => {
+    // WireMock matches when ANY value matches, not the values joined together
+    const pattern: RequestPattern = {
+      queryParameters: { status: { equalTo: 'shipped' } },
+    }
+    const mismatches = explainMismatch(
+      request({ queryParams: { status: { key: 'status', values: ['shipped', 'pending'] } } }),
+      pattern,
+    )
+    expect(mismatches).toEqual([])
+  })
+
+  it('matches a multi-valued header when any single value satisfies the pattern', () => {
+    const pattern: RequestPattern = {
+      headers: { 'X-Tag': { equalTo: 'urgent' } },
+    }
+    const mismatches = explainMismatch(
+      request({ headers: { 'X-Tag': ['low', 'urgent'] } }),
+      pattern,
+    )
+    expect(mismatches).toEqual([])
+  })
+
+  it('flags a multi-valued query param when no value satisfies the pattern', () => {
+    const pattern: RequestPattern = {
+      queryParameters: { status: { equalTo: 'shipped' } },
+    }
+    const mismatches = explainMismatch(
+      request({ queryParams: { status: { key: 'status', values: ['pending', 'cancelled'] } } }),
+      pattern,
+    )
+    expect(mismatches).toContainEqual(
+      expect.objectContaining({ field: 'queryParameter', actual: 'pending, cancelled' }),
+    )
+  })
+
+  it('does not blame the request for an invalid body regex authored on the stub', () => {
+    const pattern: RequestPattern = {
+      bodyPatterns: [{ matches: '(unterminated' }],
+    }
+    expect(explainMismatch(request({ body: 'anything' }), pattern)).toEqual([])
+  })
 })
