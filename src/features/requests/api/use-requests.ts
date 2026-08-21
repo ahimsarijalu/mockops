@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { WireMockClient } from '@/shared/api/wiremock-client'
 import type { ServerConfig } from '@/features/servers/types/server'
+import type { LoggedRequest } from '@/shared/types/wiremock'
 import { useAuditStore } from '@/features/audit/store/audit-store'
 
 const journalKey = (server: ServerConfig | null) => ['requests', server?.id, server?.baseUrl]
@@ -30,6 +31,20 @@ export function useNearMisses(server: ServerConfig | null) {
     },
     enabled: !!server,
     refetchInterval: 10000,
+  })
+}
+
+/** On-demand near-miss lookup for a single request, e.g. from the request detail sheet. */
+export function useNearMissesForRequest(server: ServerConfig | null) {
+  return useMutation({
+    mutationFn: async (request: LoggedRequest) => {
+      if (!server) throw new Error('No server configured')
+      const client = new WireMockClient(server)
+      return client.requests.findNearMissesFor(request)
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to find near misses')
+    },
   })
 }
 

@@ -1,5 +1,8 @@
+import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
+import { SearchIcon } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import {
   Sheet,
   SheetContent,
@@ -8,11 +11,15 @@ import {
   SheetDescription,
 } from '@/shared/components/ui/sheet'
 import { MonacoJsonEditor } from '@/shared/components/editor/monaco-json-editor'
-import { getStatusBadgeVariant } from '../utils/request-helpers'
+import { getStatusBadgeVariant, isUnmatched } from '../utils/request-helpers'
+import { useNearMissesForRequest } from '../api/use-requests'
+import { NearMissCard } from './near-miss-card'
+import type { ServerConfig } from '@/features/servers/types/server'
 import type { ServeEvent } from '@/shared/types/wiremock'
 
 interface RequestDetailSheetProps {
   event: ServeEvent | undefined
+  server: ServerConfig | null
   onOpenChange: (open: boolean) => void
 }
 
@@ -25,9 +32,16 @@ function tryFormatBody(body: string | undefined): { text: string; language: stri
   }
 }
 
-export function RequestDetailSheet({ event, onOpenChange }: RequestDetailSheetProps) {
+export function RequestDetailSheet({ event, server, onOpenChange }: RequestDetailSheetProps) {
   const requestBody = tryFormatBody(event?.request.body)
   const responseBody = tryFormatBody(event?.response?.body)
+  const nearMisses = useNearMissesForRequest(server)
+
+  useEffect(() => {
+    nearMisses.reset()
+    // Only reset when the selected event changes, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event?.id])
 
   return (
     <Sheet open={!!event} onOpenChange={onOpenChange}>
@@ -60,6 +74,38 @@ export function RequestDetailSheet({ event, onOpenChange }: RequestDetailSheetPr
                   </Link>
                 )}
               </div>
+
+              {isUnmatched(event) && (
+                <section className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Near-miss diagnostics</h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => nearMisses.mutate(event.request)}
+                      disabled={nearMisses.isPending || !server}
+                    >
+                      <SearchIcon className="size-3.5" />
+                      Find near misses
+                    </Button>
+                  </div>
+                  {nearMisses.isPending && (
+                    <p className="text-xs text-muted-foreground">Searching…</p>
+                  )}
+                  {nearMisses.data && nearMisses.data.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No near-miss stubs found for this request.
+                    </p>
+                  )}
+                  {nearMisses.data && nearMisses.data.length > 0 && (
+                    <div className="space-y-2">
+                      {nearMisses.data.map((nearMiss, i) => (
+                        <NearMissCard key={i} nearMiss={nearMiss} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
 
               {event.timing && (
                 <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
