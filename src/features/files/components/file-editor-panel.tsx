@@ -15,7 +15,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import { MonacoJsonEditor } from '@/shared/components/editor/monaco-json-editor'
 import { useFileContent, useSaveFile, useDeleteFile } from '../api/use-files'
-import { getFileLanguage } from '../utils/file-tree'
+import { getFileLanguage, isBinaryFile } from '../utils/file-tree'
 import type { ServerConfig } from '@/features/servers/types/server'
 import type { StubMapping } from '@/shared/types/wiremock'
 
@@ -32,6 +32,7 @@ export function FileEditorPanel({
   referencingMappings,
   onDeleted,
 }: FileEditorPanelProps) {
+  const binary = isBinaryFile(path)
   const { data, isLoading, error } = useFileContent(server, path)
   const saveFile = useSaveFile(server)
   const deleteFile = useDeleteFile(server)
@@ -40,12 +41,12 @@ export function FileEditorPanel({
   const [loadedPath, setLoadedPath] = useState<string | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  if (data !== undefined && (path !== loadedPath || content === null)) {
+  if (!binary && data !== undefined && (path !== loadedPath || content === null)) {
     setContent(data)
     setLoadedPath(path)
   }
 
-  const isDirty = content !== null && content !== data
+  const isDirty = !binary && content !== null && content !== data
 
   if (isLoading) {
     return (
@@ -73,14 +74,16 @@ export function FileEditorPanel({
           {isDirty && <Badge variant="secondary">Unsaved</Badge>}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => content !== null && saveFile.mutate({ path, content })}
-            disabled={!isDirty || saveFile.isPending}
-          >
-            <SaveIcon className="size-3.5" />
-            Save
-          </Button>
+          {!binary && (
+            <Button
+              size="sm"
+              onClick={() => content !== null && saveFile.mutate({ path, content })}
+              disabled={!isDirty || saveFile.isPending}
+            >
+              <SaveIcon className="size-3.5" />
+              Save
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => setConfirmDelete(true)}>
             <Trash2Icon className="size-3.5 text-destructive" />
             Delete
@@ -109,12 +112,19 @@ export function FileEditorPanel({
         </div>
       )}
 
-      <MonacoJsonEditor
-        value={content ?? ''}
-        onChange={setContent}
-        language={getFileLanguage(path)}
-        height={500}
-      />
+      {binary ? (
+        <div className="rounded-md border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
+          This is a binary file and can't be viewed or edited as text. Use the delete action above
+          to remove it, or manage its contents directly on the WireMock server.
+        </div>
+      ) : (
+        <MonacoJsonEditor
+          value={content ?? ''}
+          onChange={setContent}
+          language={getFileLanguage(path)}
+          height={500}
+        />
+      )}
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
