@@ -82,17 +82,41 @@ function checkUrl(request: LoggedRequest, pattern: RequestPattern): Mismatch | n
   return null
 }
 
+/**
+ * Normalizes a raw journal value for a header/query-param/cookie into a
+ * displayable string. WireMock serializes query parameters as
+ * `{ key, values: string[] }` objects (not a plain string or array), so
+ * that shape is unwrapped in addition to the plain string/array cases.
+ */
+function normalizeValue(rawActual: unknown): string | undefined {
+  if (rawActual === undefined || rawActual === null) return undefined
+  if (typeof rawActual === 'string') return rawActual
+  if (Array.isArray(rawActual)) return rawActual.join(', ')
+  if (typeof rawActual === 'object' && 'values' in rawActual) {
+    const values = (rawActual as { values?: unknown }).values
+    if (Array.isArray(values)) return values.join(', ')
+  }
+  return String(rawActual)
+}
+
 function checkKeyValueMap(
   actualMap: Record<string, unknown> | undefined,
   expectedMap: Record<string, StringValuePattern> | undefined,
   field: MismatchField,
   labelPrefix: string,
+  { caseInsensitiveKeys = false }: { caseInsensitiveKeys?: boolean } = {},
 ): Mismatch[] {
   if (!expectedMap) return []
   const mismatches: Mismatch[] = []
+  const lowercasedActualMap = caseInsensitiveKeys
+    ? Object.fromEntries(Object.entries(actualMap ?? {}).map(([k, v]) => [k.toLowerCase(), v]))
+    : undefined
+
   for (const [key, pattern] of Object.entries(expectedMap)) {
-    const rawActual = actualMap?.[key]
-    const actualValue = Array.isArray(rawActual) ? rawActual.join(', ') : (rawActual as string)
+    const rawActual = lowercasedActualMap
+      ? lowercasedActualMap[key.toLowerCase()]
+      : actualMap?.[key]
+    const actualValue = normalizeValue(rawActual)
     if (!testStringPattern(pattern, actualValue)) {
       mismatches.push({
         field,
@@ -107,7 +131,11 @@ function checkKeyValueMap(
 
 function checkBody(request: LoggedRequest, pattern: RequestPattern): Mismatch[] {
   if (!pattern.bodyPatterns || pattern.bodyPatterns.length === 0) return []
-  const body = request.body ?? ''
+  // Keep body undefined when genuinely absent — testStringPattern's `absent`
+  // branch checks `value === undefined`, so collapsing to '' here would make
+  // an { absent: true } pattern always report a mismatch, even when the
+  // request truly has no body.
+  const body = request.body
   const mismatches: Mismatch[] = []
   for (const bodyPattern of pattern.bodyPatterns) {
     // Only evaluate matchers we can reliably test client-side; skip the rest
@@ -125,7 +153,7 @@ function checkBody(request: LoggedRequest, pattern: RequestPattern): Mismatch[] 
         field: 'body',
         label: 'Request body',
         expected: describePattern(bodyPattern),
-        actual: body.length > 200 ? `${body.slice(0, 200)}…` : body || '(empty)',
+        actual: body ? (body.length > 200 ? `${body.slice(0, 200)}…` : body) : '(empty)',
       })
     }
   }
@@ -159,7 +187,9 @@ export function explainMismatch(request: LoggedRequest, pattern: RequestPattern)
   if (urlMismatch) mismatches.push(urlMismatch)
 
   mismatches.push(
-    ...checkKeyValueMap(request.headers, pattern.headers, 'header', 'Header'),
+    ...checkKeyValueMap(request.headers, pattern.headers, 'header', 'Header', {
+      caseInsensitiveKeys: true,
+    }),
     ...checkKeyValueMap(
       request.queryParams,
       pattern.queryParameters,

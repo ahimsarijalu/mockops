@@ -93,4 +93,62 @@ describe('explainMismatch', () => {
     const mismatches = explainMismatch(request({ headers: { 'X-Debug': 'true' } }), pattern)
     expect(mismatches).toContainEqual(expect.objectContaining({ label: 'Header "X-Debug"' }))
   })
+
+  it('matches headers case-insensitively by key, like WireMock does', () => {
+    const pattern: RequestPattern = {
+      headers: { 'X-Api-Key': { equalTo: 'secret' } },
+    }
+    // the journal may have logged the header under different casing than
+    // the stub pattern was authored with
+    const mismatches = explainMismatch(request({ headers: { 'x-api-key': 'secret' } }), pattern)
+    expect(mismatches).toEqual([])
+  })
+
+  it('does not flag a case-insensitive header match on cookies/query params', () => {
+    // cookie and query-param names stay case-sensitive
+    const pattern: RequestPattern = {
+      cookies: { session: { equalTo: 'abc' } },
+    }
+    const mismatches = explainMismatch(request({ cookies: { Session: 'abc' } }), pattern)
+    expect(mismatches).toContainEqual(expect.objectContaining({ label: 'Cookie "session"' }))
+  })
+
+  it('unwraps the WireMock { key, values[] } query parameter shape', () => {
+    const pattern: RequestPattern = {
+      queryParameters: { status: { equalTo: 'shipped' } },
+    }
+    const mismatches = explainMismatch(
+      request({ queryParams: { status: { key: 'status', values: ['shipped'] } } }),
+      pattern,
+    )
+    expect(mismatches).toEqual([])
+  })
+
+  it('reports the joined values when a { key, values[] } query param mismatches', () => {
+    const pattern: RequestPattern = {
+      queryParameters: { status: { equalTo: 'shipped' } },
+    }
+    const mismatches = explainMismatch(
+      request({ queryParams: { status: { key: 'status', values: ['pending'] } } }),
+      pattern,
+    )
+    expect(mismatches).toContainEqual(
+      expect.objectContaining({ field: 'queryParameter', actual: 'pending' }),
+    )
+  })
+
+  it('does not flag an absent body pattern when the request truly has no body', () => {
+    const pattern: RequestPattern = {
+      bodyPatterns: [{ absent: true }],
+    }
+    expect(explainMismatch(request({ body: undefined }), pattern)).toEqual([])
+  })
+
+  it('flags an absent body pattern when the request does have a body', () => {
+    const pattern: RequestPattern = {
+      bodyPatterns: [{ absent: true }],
+    }
+    const mismatches = explainMismatch(request({ body: 'hello' }), pattern)
+    expect(mismatches).toContainEqual(expect.objectContaining({ field: 'body' }))
+  })
 })
