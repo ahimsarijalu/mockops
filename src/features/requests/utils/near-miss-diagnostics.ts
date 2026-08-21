@@ -15,6 +15,22 @@ function describePattern(pattern: StringValuePattern): string {
   return entries.map(([matcher, value]) => `${matcher}: ${JSON.stringify(value)}`).join(', ')
 }
 
+/**
+ * WireMock's regex matchers (matches/doesNotMatch/urlPattern/urlPathPattern)
+ * use Java's Pattern.matches semantics, which requires the ENTIRE string to
+ * match — unlike JS RegExp.test, which succeeds on any substring. Anchor to
+ * the full string so client-side semantics line up with WireMock's.
+ * Returns null (indeterminate) for an invalid regex rather than throwing —
+ * a malformed matcher authored on the stub is never the request's fault.
+ */
+function regexFullMatch(patternSource: string, value: string): boolean | null {
+  try {
+    return new RegExp(`^(?:${patternSource})$`).test(value)
+  } catch {
+    return null
+  }
+}
+
 function testStringPattern(pattern: StringValuePattern, value: string | undefined): boolean {
   const v = value ?? ''
   if (pattern.absent !== undefined)
@@ -26,21 +42,12 @@ function testStringPattern(pattern: StringValuePattern, value: string | undefine
   }
   if (pattern.contains !== undefined) return v.includes(pattern.contains)
   if (pattern.matches !== undefined) {
-    try {
-      return new RegExp(pattern.matches).test(v)
-    } catch {
-      // Invalid regex authored on the stub — not something the request can
-      // be blamed for. Consistent with checkUrl's handling of a bad
-      // urlPattern/urlPathPattern.
-      return true
-    }
+    // Invalid/indeterminate regex is never blamed on the request.
+    return regexFullMatch(pattern.matches, v) ?? true
   }
   if (pattern.doesNotMatch !== undefined) {
-    try {
-      return !new RegExp(pattern.doesNotMatch).test(v)
-    } catch {
-      return true
-    }
+    const result = regexFullMatch(pattern.doesNotMatch, v)
+    return result === null ? true : !result
   }
   // Matchers we can't evaluate client-side (JSON/XPath/JSON-path/etc.) are
   // treated as indeterminate — never flagged as a hard mismatch.
@@ -59,27 +66,19 @@ function checkUrl(request: LoggedRequest, pattern: RequestPattern): Mismatch | n
     }
   }
   if (pattern.urlPattern !== undefined) {
-    try {
-      if (!new RegExp(pattern.urlPattern).test(actual)) {
-        return { field: 'url', label: 'URL pattern', expected: pattern.urlPattern, actual }
-      }
-    } catch {
-      // invalid regex on the mapping side — not something the request can be blamed for
+    if (regexFullMatch(pattern.urlPattern, actual) === false) {
+      return { field: 'url', label: 'URL pattern', expected: pattern.urlPattern, actual }
     }
   }
   if (pattern.urlPathPattern !== undefined) {
     const actualPath = actual.split('?')[0]
-    try {
-      if (!new RegExp(pattern.urlPathPattern).test(actualPath)) {
-        return {
-          field: 'url',
-          label: 'URL path pattern',
-          expected: pattern.urlPathPattern,
-          actual: actualPath,
-        }
+    if (regexFullMatch(pattern.urlPathPattern, actualPath) === false) {
+      return {
+        field: 'url',
+        label: 'URL path pattern',
+        expected: pattern.urlPathPattern,
+        actual: actualPath,
       }
-    } catch {
-      // invalid regex on the mapping side
     }
   }
   return null
