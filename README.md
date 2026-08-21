@@ -83,6 +83,41 @@ Each feature follows: `api/ components/ hooks/ pages/ schemas/ types/ store/`.
   deployment; and a GitHub Actions CI pipeline (type-check, lint, test, build,
   Docker build).
 
+## WireMock Admin API coverage
+
+| Area              | Endpoints                                                                                                                                                              | Status                                                                                                                                                                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Mappings          | `GET/POST /mappings`, `GET/PUT/DELETE /mappings/{id}`, `DELETE /mappings`, `POST /mappings/reset\|save\|import`, `POST /mappings/find-by-metadata\|remove-by-metadata` | Supported                                                                                                                                                                                                                                                                      |
+| Request journal   | `GET /requests`, `GET/DELETE /requests/{id}`, `DELETE /requests`, `POST /requests/count`, `GET /requests/unmatched`                                                    | Supported                                                                                                                                                                                                                                                                      |
+| Near misses       | `GET /requests/unmatched/near-misses`, `POST /near-misses/request`                                                                                                     | Supported, plus client-side field-level mismatch explanations (method/URL/header/query/cookie/body) beyond what the raw API returns                                                                                                                                            |
+| Scenarios         | `GET /scenarios`, `POST /scenarios/reset`, `PUT /scenarios/{name}/state`                                                                                               | Supported                                                                                                                                                                                                                                                                      |
+| Recordings        | `GET /recordings/status`, `POST /recordings/start\|stop\|snapshot`                                                                                                     | Supported                                                                                                                                                                                                                                                                      |
+| Files             | `GET /files`, `GET/PUT/DELETE /files/{name}`                                                                                                                           | Supported for text files; binary `__files` (images, archives, fonts, etc.) are listed and deletable but intentionally not opened in the editor — WireMock's files API has no content-type signal, so decoding binary bytes as text and saving them back would corrupt the file |
+| Settings & system | `GET/POST /settings`, `GET /health`, `GET /version`, `POST /reset`, `POST /shutdown` (client method present, intentionally not wired to any UI action)                 | Supported                                                                                                                                                                                                                                                                      |
+
+Every schema in `src/shared/types/wiremock.ts` uses a Zod `catchall`, so
+fields the UI doesn't have dedicated controls for (custom matchers, exotic
+`postServeActions`, future WireMock additions) round-trip through the JSON
+editor instead of being silently dropped.
+
+## Authentication & RBAC
+
+MockOps is a static SPA with no backend of its own — it talks directly to
+whatever WireMock Admin API base URL you configure, from the browser. That
+architecture cannot securely enforce authorization: any client-side role
+check is a UI convenience (hiding buttons, disabling actions), not a
+security boundary, since a user can always call the WireMock Admin API
+directly with the same credentials MockOps holds.
+
+Real access control has to live in front of WireMock itself — e.g. WireMock's
+own basic-auth/token config, a reverse proxy (nginx, an API gateway) doing
+auth in front of `/__admin`, or an identity-aware proxy — and MockOps'
+`basic`/`bearer` auth modes on each server entry are how you hand it
+credentials for that boundary. Per-server credentials are stored in
+`localStorage` (via the persisted server store) for convenience; treat that
+the same as any other browser-stored secret, and prefer scoped or short-lived
+credentials over long-lived admin tokens where the upstream supports it.
+
 ## Multi-server support
 
 Servers are stored locally (Zustand + localStorage) with environment tagging
