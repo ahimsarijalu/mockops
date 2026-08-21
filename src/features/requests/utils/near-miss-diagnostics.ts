@@ -104,13 +104,17 @@ function getValues(rawActual: unknown): string[] | undefined {
 /**
  * WireMock matches a multi-valued header/query-param field when ANY one of
  * its values satisfies the matcher, not when the values joined together do.
+ * An empty values array (present key, no values) is treated the same as no
+ * value at all — [].some(...) is always false regardless of the predicate,
+ * which would otherwise force a mismatch even for an indeterminate matcher.
  */
 function matchesAnyValue(pattern: StringValuePattern, values: string[] | undefined): boolean {
+  const nonEmptyValues = values && values.length > 0 ? values : undefined
   if (pattern.absent !== undefined) {
-    return pattern.absent ? values === undefined : values !== undefined
+    return pattern.absent ? nonEmptyValues === undefined : nonEmptyValues !== undefined
   }
-  if (values === undefined) return testStringPattern(pattern, undefined)
-  return values.some((v) => testStringPattern(pattern, v))
+  if (nonEmptyValues === undefined) return testStringPattern(pattern, undefined)
+  return nonEmptyValues.some((v) => testStringPattern(pattern, v))
 }
 
 function checkKeyValueMap(
