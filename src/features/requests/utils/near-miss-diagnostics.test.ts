@@ -229,4 +229,29 @@ describe('explainMismatch', () => {
     const mismatches = explainMismatch(request({ url: '/orders/42/extra' }), pattern)
     expect(mismatches.some((m) => m.label === 'URL path pattern')).toBe(true)
   })
+
+  it('treats a present-but-empty values array as no value, not a forced mismatch', () => {
+    // [].some(...) is always false regardless of the predicate, so an
+    // empty values array must be normalized to "absent" rather than
+    // forcing a mismatch even for an indeterminate matcher
+    const pattern: RequestPattern = {
+      queryParameters: { status: { absent: true } },
+    }
+    const mismatches = explainMismatch(
+      request({ queryParams: { status: { key: 'status', values: [] } } }),
+      pattern,
+    )
+    expect(mismatches).toEqual([])
+  })
+
+  it('flags absent:true as a mismatch when a non-empty values array is present', () => {
+    const pattern: RequestPattern = {
+      queryParameters: { status: { absent: true } },
+    }
+    const mismatches = explainMismatch(
+      request({ queryParams: { status: { key: 'status', values: ['shipped'] } } }),
+      pattern,
+    )
+    expect(mismatches).toContainEqual(expect.objectContaining({ field: 'queryParameter' }))
+  })
 })
