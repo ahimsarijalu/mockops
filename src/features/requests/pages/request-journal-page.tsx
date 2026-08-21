@@ -127,6 +127,7 @@ export function RequestJournalPage() {
 
       <RequestDetailSheet
         event={selectedEvent}
+        server={server}
         onOpenChange={(open) => !open && setSelectedEvent(undefined)}
       />
 

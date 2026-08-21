@@ -235,7 +235,20 @@ export function MappingsListPage() {
               variant="destructive"
               onClick={() => {
                 bulkDeleteMappings.mutate(selectedMappings, {
-                  onSuccess: () => setRowSelection({}),
+                  onSuccess: ({ failed }) => {
+                    if (failed.length === 0) {
+                      setRowSelection({})
+                    } else {
+                      const failedIds = new Set(
+                        failed.map(({ mapping }) => mapping.id ?? mapping.uuid),
+                      )
+                      setRowSelection((prev) =>
+                        Object.fromEntries(
+                          Object.entries(prev).filter(([key]) => failedIds.has(key)),
+                        ),
+                      )
+                    }
+                  },
                 })
                 setBulkDeleting(false)
               }}

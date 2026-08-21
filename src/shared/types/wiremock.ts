@@ -163,6 +163,8 @@ export const loggedRequestSchema = z
   })
   .catchall(z.unknown())
 
+export type LoggedRequest = z.infer<typeof loggedRequestSchema>
+
 export const loggedResponseSchema = z
   .object({
     status: z.number(),

@@ -97,20 +97,49 @@ export function useDeleteMapping(server: ServerConfig | null) {
   })
 }
 
+export interface BulkDeleteResult {
+  requested: StubMapping[]
+  succeeded: StubMapping[]
+  failed: { mapping: StubMapping; error: unknown }[]
+}
+
 export function useBulkDeleteMappings(server: ServerConfig | null) {
   const queryClient = useQueryClient()
   const logAction = useAuditStore((s) => s.log)
   return useMutation({
-    mutationFn: async (mappings: StubMapping[]) => {
+    mutationFn: async (mappings: StubMapping[]): Promise<BulkDeleteResult> => {
       if (!server) throw new Error('No server configured')
       const client = new WireMockClient(server)
-      await Promise.all(mappings.filter((m) => m.id).map((m) => client.mappings.remove(m.id!)))
-      return mappings
+      const targets = mappings.filter((m): m is StubMapping & { id: string } => !!m.id)
+      const results = await Promise.allSettled(targets.map((m) => client.mappings.remove(m.id)))
+      const succeeded: StubMapping[] = []
+      const failed: BulkDeleteResult['failed'] = []
+      results.forEach((result, index) => {
+        const mapping = targets[index]
+        if (result.status === 'fulfilled') {
+          succeeded.push(mapping)
+        } else {
+          failed.push({ mapping, error: result.reason })
+        }
+      })
+      return { requested: mappings, succeeded, failed }
     },
-    onSuccess: (mappings) => {
+    onSuccess: ({ succeeded, failed }) => {
+      // Always invalidate: even a fully-failed batch may have partially
+      // mutated server state before a later request in the batch failed.
       queryClient.invalidateQueries({ queryKey: mappingsKey(server) })
-      logAction({ action: 'Deleted Stub', target: `${mappings.length} mappings (bulk)` })
-      toast.success(`Deleted ${mappings.length} mapping(s)`)
+      if (succeeded.length > 0) {
+        logAction({ action: 'Deleted Stub', target: `${succeeded.length} mappings (bulk)` })
+      }
+      if (failed.length === 0) {
+        toast.success(`Deleted ${succeeded.length} mapping(s)`)
+      } else if (succeeded.length === 0) {
+        toast.error(`Failed to delete ${failed.length} mapping(s)`)
+      } else {
+        toast.warning(
+          `Deleted ${succeeded.length} mapping(s), but ${failed.length} failed to delete`,
+        )
+      }
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Failed to delete mappings')
