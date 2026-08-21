@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { WireMockClient } from '@/shared/api/wiremock-client'
 import type { ServerConfig } from '@/features/servers/types/server'
 import { useAuditStore } from '@/features/audit/store/audit-store'
+import { isBinaryFile } from '../utils/file-tree'
 
 const filesKey = (server: ServerConfig | null) => ['files', server?.id, server?.baseUrl]
 
@@ -26,7 +27,9 @@ export function useFileContent(server: ServerConfig | null, path: string | undef
       const client = new WireMockClient(server)
       return client.files.get(path)
     },
-    enabled: !!server && !!path,
+    // Binary content decoded as text would be corrupted, and any save
+    // would write the corruption back to disk — never fetch it for editing.
+    enabled: !!server && !!path && !isBinaryFile(path),
   })
 }
 

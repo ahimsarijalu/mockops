@@ -37,6 +37,48 @@ export function buildFileTree(paths: string[]): FileTreeNode[] {
   return root
 }
 
+const BINARY_EXTENSIONS = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'bmp',
+  'ico',
+  'webp',
+  'pdf',
+  'zip',
+  'gz',
+  'tar',
+  'jar',
+  'class',
+  'exe',
+  'dll',
+  'so',
+  'woff',
+  'woff2',
+  'ttf',
+  'otf',
+  'mp3',
+  'mp4',
+  'wav',
+  'avi',
+  'mov',
+  'bin',
+  'dat',
+])
+
+/**
+ * WireMock's files API returns __files content as opaque text (no
+ * content-type-aware body). Binary content decoded as text corrupts bytes,
+ * and re-saving it would write the corrupted bytes back, permanently
+ * destroying the file — so binary files must never be opened in the text
+ * editor.
+ */
+export function isBinaryFile(path: string): boolean {
+  const ext = path.split('.').pop()?.toLowerCase()
+  return !!ext && BINARY_EXTENSIONS.has(ext)
+}
+
 export function getFileLanguage(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase()
   switch (ext) {

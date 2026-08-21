@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildFileTree, getFileLanguage } from './file-tree'
+import { buildFileTree, getFileLanguage, isBinaryFile } from './file-tree'
 
 describe('buildFileTree', () => {
   it('builds a nested tree from flat paths', () => {
@@ -44,5 +44,20 @@ describe('getFileLanguage', () => {
   it('falls back to plaintext for unknown or missing extensions', () => {
     expect(getFileLanguage('noext')).toBe('plaintext')
     expect(getFileLanguage('data.bin')).toBe('plaintext')
+  })
+})
+
+describe('isBinaryFile', () => {
+  it('identifies common binary extensions', () => {
+    expect(isBinaryFile('images/logo.png')).toBe(true)
+    expect(isBinaryFile('assets/doc.pdf')).toBe(true)
+    expect(isBinaryFile('archives/bundle.zip')).toBe(true)
+    expect(isBinaryFile('raw/data.bin')).toBe(true)
+  })
+
+  it('treats text-based extensions as non-binary', () => {
+    expect(isBinaryFile('responses/user.json')).toBe(false)
+    expect(isBinaryFile('README.md')).toBe(false)
+    expect(isBinaryFile('noext')).toBe(false)
   })
 })
