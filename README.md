@@ -191,12 +191,12 @@ Releases follow [Semantic Versioning](https://semver.org/) and are
 computed deterministically (no AI service involved) from every PR merged
 into `main` since the last release, in priority order:
 
-1. An explicit `release:major` / `release:minor` / `release:patch` label on
-   the PR.
-2. Its title's [Conventional Commits](https://www.conventionalcommits.org/)
+1. Its title's [Conventional Commits](https://www.conventionalcommits.org/)
    type — `feat:` → minor, `fix:`/`docs:`/`refactor:`/`test:`/`build:`/
    `ci:`/`chore:` → patch, any type with `!` or a `BREAKING CHANGE:` footer
    → major.
+2. If the title isn't a recognized Conventional Commit, an explicit
+   `release:major` / `release:minor` / `release:patch` label on the PR.
 3. Patch, if neither of the above applies.
 
 When multiple PRs are included in one release, the highest bump wins (e.g.

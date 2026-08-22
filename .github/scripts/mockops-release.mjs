@@ -10,8 +10,9 @@
 //      documentation-only (docs/** or README.md) -> no release.
 //   3. Otherwise, classify every commit since the last tag (via its PR,
 //      when the commit is a merge/squash of one, else the commit subject
-//      itself) and bump by the highest of: `release:*` label > Conventional
-//      Commit type > patch fallback.
+//      itself) and bump by the highest of: Conventional Commit type >
+//      `release:*` label (only for a non-conventional title) > patch
+//      fallback.
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, appendFileSync } from 'node:fs'

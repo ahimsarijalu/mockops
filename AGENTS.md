@@ -171,10 +171,11 @@ every push to `main` — do not push release tags by hand and do not bump
 
 1. Walks the PRs merged into `main` since the last `v*.*.*` tag.
 2. Classifies each one (`.github/scripts/lib/classify.mjs`, deterministic,
-   no AI): an explicit `release:major|minor|patch` label wins; otherwise
-   its Conventional Commits type (`feat:` → minor, `fix:`/`docs:`/
-   `refactor:`/`test:`/`build:`/`ci:`/`chore:` → patch, `!` or
-   `BREAKING CHANGE:` → major); otherwise patch.
+   no AI): its Conventional Commits type wins when the title is a
+   recognized one (`feat:` → minor, `fix:`/`docs:`/`refactor:`/`test:`/
+   `build:`/`ci:`/`chore:` → patch, `!` or `BREAKING CHANGE:` → major);
+   otherwise an explicit `release:major|minor|patch` label; otherwise
+   patch.
 3. Takes the highest bump across all of them, skips the release entirely if
    every changed file since the last tag is documentation-only, then
    re-validates, rebuilds, builds/pushes the Docker image to
