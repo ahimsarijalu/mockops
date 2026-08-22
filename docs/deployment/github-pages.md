@@ -9,15 +9,17 @@ built and deployed — separate from deploying the MockOps _application_
 
 ```mermaid
 flowchart LR
-    Push["Push to main<br/>(docs/** or workflow changes)"]
+    Push["Push to main<br/>(docs/**, README.md, or workflow changes)"]
     Workflow[".github/workflows/docs-ci.yml"]
     Install["npm ci"]
     Build["npm run docs:build<br/>(generates llms-full.txt, then vitepress build docs)"]
+    BuildArtifact["actions/upload-artifact<br/>docs-dist"]
+    Download["actions/download-artifact<br/>docs-dist"]
     Artifact["actions/upload-pages-artifact<br/>docs/.vitepress/dist"]
     Deploy["actions/deploy-pages"]
     Pages["GitHub Pages<br/>https://ahimsarijalu.github.io/mockops/"]
 
-    Push --> Workflow --> Install --> Build --> Artifact --> Deploy --> Pages
+    Push --> Workflow --> Install --> Build --> BuildArtifact --> Download --> Artifact --> Deploy --> Pages
 ```
 
 ## Workflow: `.github/workflows/docs-ci.yml`
@@ -25,20 +27,24 @@ flowchart LR
 A **separate** workflow from `mockops-ci.yml`/`mockops-release.yml`
 (application CI/CD is untouched — see
 [Architecture Decisions](/reference/architecture-decisions)), using the
-official GitHub Pages actions:
+official GitHub Pages actions — but only from the `deploy` job (see
+**Permissions** below for why):
 
 - `actions/checkout` (`fetch-depth: 0`, needed for VitePress's
-  `lastUpdated` git-history lookup)
-- `actions/setup-node` (Node 22, matching `mockops-ci.yml`)
-- `actions/configure-pages`
-- `actions/upload-pages-artifact` — uploads `docs/.vitepress/dist`
-- `actions/deploy-pages` — deploys to the repository's GitHub Pages
-  environment
+  `lastUpdated` git-history lookup) and `actions/setup-node` (Node 22,
+  matching `mockops-ci.yml`) — `build` job
+- `actions/upload-artifact` (`build` job, non-PR runs only) /
+  `actions/download-artifact` (`deploy` job) — hands the built
+  `docs/.vitepress/dist` from `build` to `deploy` as a plain build
+  artifact; this is _not_ the Pages artifact
+- `actions/configure-pages`, `actions/upload-pages-artifact`,
+  `actions/deploy-pages` — all in the `deploy` job, which is the only job
+  that ever calls the Pages API
 
-**Triggers**: pushes to `main` that touch `docs/**`, `package.json`,
-`package-lock.json`, or the workflow file itself, plus a manual
-`workflow_dispatch`. Pull requests only run the build (to catch a broken
-docs build in review) — the deploy job runs on `main` only.
+**Triggers**: pushes to `main` that touch `docs/**`, `README.md`,
+`package.json`, `package-lock.json`, or the workflow file itself, plus a
+manual `workflow_dispatch`. Pull requests only run the `build` job (to
+catch a broken docs build in review) — `deploy` only runs on `main`.
 
 **Permissions** (least-privilege, no long-lived tokens): the workflow
 defaults to `contents: read` for every job, including PR builds. Only the

@@ -85,6 +85,17 @@ async function determine() {
     .split('\n')
     .filter(Boolean)
 
+  if (changedFiles.length === 0) {
+    return {
+      releaseRequired: false,
+      previousVersion: previousTag,
+      version: null,
+      bump: null,
+      reason: `no files changed since ${previousTag} — nothing to release`,
+      prNumbers: [],
+    }
+  }
+
   if (isDocsOnly(changedFiles)) {
     return {
       releaseRequired: false,
