@@ -140,7 +140,7 @@ async function syncComment({ classification, docsOnly, currentVersion, expectedV
 
 **Reason:** ${classification.reason}
 ${docsNote}
-<sub>Updates automatically as this PR changes. Informational only — the release level that actually ships is decided by \`mockops-release.yml\` from every PR merged into \`main\` since the last release (highest of: \`release:*\` label → Conventional Commit type → patch fallback), and a release only happens at all if at least one merged PR touches non-documentation files.</sub>`
+<sub>Updates automatically as this PR changes. Informational only — the release level that actually ships is decided by \`mockops-release.yml\` from every PR merged into \`main\` since the last release (highest of: Conventional Commit type → \`release:*\` label, used only for a non-conventional title → patch fallback), and a release only happens at all if at least one merged PR touches non-documentation files.</sub>`
 
   const comments = await ghPaginated(`/repos/${repo}/issues/${prNumber}/comments`)
   const existing = comments.find((c) => c.body?.includes(MARKER))
