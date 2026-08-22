@@ -37,11 +37,12 @@ block.
 a validation check only — it is never pushed from a PR.
 
 `.github/workflows/mockops-release.yml` (push to `main`, skipped for
-docs-only changes) runs the same `validate` sequence again, then builds
-and pushes the image described in [Docker](/deployment/docker), tags it,
-and creates the GitHub Release. It doesn't reuse `mockops-ci.yml` as a
-job — see [Architecture Decisions](/reference/architecture-decisions) for
-why the two stay independent.
+docs-only changes) re-runs `build-and-test`'s sequence (not `e2e` — see
+[Testing](/development/testing) for why), then builds and pushes the
+image described in [Docker](/deployment/docker), tags it, and creates the
+GitHub Release. It doesn't reuse `mockops-ci.yml` as a job — see
+[Architecture Decisions](/reference/architecture-decisions) for why the
+two stay independent.
 
 `.github/workflows/docs-ci.yml` runs `npm ci` → `npm run docs:build`, then
 uploads and — on `main` only — deploys `docs/.vitepress/dist` — see

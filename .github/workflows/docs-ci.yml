@@ -15,12 +15,14 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'README.md'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/docs-ci.yml'
   pull_request:
     paths:
       - 'docs/**'
+      - 'README.md'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/docs-ci.yml'
@@ -60,17 +62,17 @@ jobs:
         run: npm run docs:build
 
       # A PR run only needs to prove the build above succeeds — it never
-      # deploys, so it has no reason to call the Pages API (which 404s
-      # until Pages is enabled on the repository, and which it has no
-      # permission to call anyway under the workflow-level `contents: read`
-      # above).
+      # deploys, so there's nothing further to do. On a push to main, hand
+      # the built site to the `deploy` job as a plain build artifact: the
+      # Pages API calls (configure-pages/upload-pages-artifact) themselves
+      # happen over there, in the job that actually holds `pages: write` —
+      # this job only ever has `contents: read`, on every run including PRs.
       - if: github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
-
-      - if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
+          name: docs-dist
           path: docs/.vitepress/dist
+          retention-days: 1
 
   deploy:
     # Only publish from main — PRs just verify the build above.
@@ -93,5 +95,17 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download docs build
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-dist
+          path: docs/.vitepress/dist
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
       - id: deployment
         uses: actions/deploy-pages@v4
