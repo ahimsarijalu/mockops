@@ -48,9 +48,13 @@ permissions:
   id-token: write
 ```
 
-`concurrency` is set so a new push waits for any in-flight docs deploy to
-finish rather than cancelling it — a Pages deployment is never
-interrupted mid-way.
+`concurrency` is scoped per job, not per workflow: the `build` job groups
+by `github.ref` and cancels a superseded run on the same ref/PR (so
+pushing again to a PR doesn't queue behind its own stale build), while the
+`deploy` job uses a single non-cancelling `pages` group so a new deploy
+always waits for an in-flight one to finish rather than interrupting it
+mid-way. The two never share a group, so a PR's build-only run is never
+queued behind an unrelated deploy on `main`.
 
 ## Base path
 

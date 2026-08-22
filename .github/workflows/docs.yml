@@ -21,15 +21,15 @@ permissions:
   pages: write
   id-token: write
 
-# A new push waits for any in-flight deploy to finish rather than
-# cancelling it, so a Pages deployment is never interrupted mid-way.
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Scoped per-ref and cancelable — a PR's build-only run must never
+    # queue behind main's deploy pipeline (they share no state), and a
+    # superseded push to the same ref/PR should cancel its stale build.
+    concurrency:
+      group: docs-build-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,6 +63,11 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    # A new deploy waits for any in-flight one to finish rather than
+    # cancelling it, so a Pages deployment is never interrupted mid-way.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
