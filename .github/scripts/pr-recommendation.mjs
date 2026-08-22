@@ -69,10 +69,9 @@ function latestTag() {
     const first = out.split('\n').find(Boolean)
     if (first) return first.trim()
   } catch {
-    // fall through to package.json below
+    // fall through to null below
   }
-  const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
-  return `v${pkg.version}`
+  return null
 }
 
 async function main() {
@@ -80,8 +79,16 @@ async function main() {
   const docsOnly = isDocsOnly(files)
   const classification = classifyChange({ title: prTitle, body: prBody, labels: prLabels })
 
-  const currentVersion = latestTag()
-  const expectedVersion = bumpVersion(currentVersion, classification.bump)
+  const previousTag = latestTag()
+  // Mirrors mockops-release.mjs: with no prior tag, the actual first
+  // release ships package.json's version unbumped, not one bumped past it
+  // — so "current" and "expected" must be the same value here too, or the
+  // comment would show a version merging never actually produces.
+  const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
+  const currentVersion = previousTag || `v${pkg.version}`
+  const expectedVersion = previousTag
+    ? bumpVersion(previousTag, classification.bump)
+    : currentVersion
 
   await syncLabel(classification.bump)
   await syncComment({ classification, docsOnly, currentVersion, expectedVersion })
