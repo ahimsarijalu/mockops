@@ -111,6 +111,12 @@ jobs:
 
       # Validation only — never pushed. This proves the image still builds
       # on every PR without granting PR runs any registry credentials.
+      #
+      # cache-from only, no cache-to: a fork PR's GITHUB_TOKEN is read-only
+      # and can't write a new GHA cache entry, and this job doesn't need
+      # to seed one anyway — mockops-release.yml's docker build already
+      # writes cache-to on every push to main, which every PR build here
+      # then reads from.
       - name: Build Docker image (no push)
         uses: docker/build-push-action@v7
         with:
@@ -118,4 +124,3 @@ jobs:
           push: false
           tags: mockops:pr-${{ github.event.pull_request.number || github.run_id }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
