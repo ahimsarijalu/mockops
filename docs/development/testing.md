@@ -91,8 +91,11 @@ consider adding a Playwright check for any new user-facing flow.
 
 ## CI test behavior
 
-`.github/workflows/ci.yml` runs unit tests and E2E tests as **separate
-jobs** (`build-and-test` and `e2e`), both on every push to `main` and
-every pull request; the `docker` job only runs after both pass. See
+`.github/workflows/mockops-ci.yml` runs unit tests and E2E tests as
+**separate jobs** (`build-and-test` and `e2e`) on every pull request that
+touches non-docs files; the `docker` job only runs after both pass, and
+only as a build validation — it never pushes. The same checks run again
+in `.github/workflows/mockops-release.yml`'s `validate` job on every push
+to `main` that actually produces a release. See
 [Reference → Commands](/reference/commands) for how each script maps to a
 CI step.

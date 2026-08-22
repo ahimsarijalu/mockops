@@ -1,4 +1,14 @@
-name: Docs
+name: Docs CI/CD
+
+# Validates and deploys the VitePress documentation site independently of
+# the MockOps application (see mockops-ci.yml / mockops-release.yml).
+#
+# - Any push/PR touching docs content builds the site (PRs only validate —
+#   they never deploy).
+# - Only a push to `main` deploys to GitHub Pages.
+# - A documentation-only change never touches the MockOps app: no app
+#   tests, no application build, no Docker build, no GHCR push, no
+#   application release.
 
 on:
   push:
@@ -7,19 +17,21 @@ on:
       - 'docs/**'
       - 'package.json'
       - 'package-lock.json'
-      - '.github/workflows/docs.yml'
+      - '.github/workflows/docs-ci.yml'
   pull_request:
     paths:
       - 'docs/**'
       - 'package.json'
       - 'package-lock.json'
-      - '.github/workflows/docs.yml'
+      - '.github/workflows/docs-ci.yml'
   workflow_dispatch:
 
+# Default to read-only; only the deploy job below elevates to pages/id-token
+# write, and only for pushes to main. A same-repo PR build never receives
+# deployment permissions, and a fork PR never receives write permissions at
+# all under `pull_request`.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -31,13 +43,13 @@ jobs:
       group: docs-build-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # VitePress' `lastUpdated` reads git history per-page; a shallow
           # clone would only ever show the checkout commit's date.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -49,7 +61,9 @@ jobs:
 
       # A PR run only needs to prove the build above succeeds — it never
       # deploys, so it has no reason to call the Pages API (which 404s
-      # until Pages is enabled on the repository).
+      # until Pages is enabled on the repository, and which it has no
+      # permission to call anyway under the workflow-level `contents: read`
+      # above).
       - if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
@@ -63,6 +77,13 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    # Least-privilege: only this job, which only runs for a push to main,
+    # gets to write to Pages. The build job above (including every PR run)
+    # never holds these permissions.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     # A new deploy waits for any in-flight one to finish rather than
     # cancelling it, so a Pages deployment is never interrupted mid-way.
     concurrency:

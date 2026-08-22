@@ -57,7 +57,7 @@ npm run test
 ```
 
 See [Testing](/development/testing) for what each check actually covers,
-and `.github/workflows/ci.yml` for the exact CI steps.
+and `.github/workflows/mockops-ci.yml` for the exact CI steps.
 
 ## Local WireMock instance
 

@@ -1,0 +1,51 @@
+name: PR Release Recommendation
+
+# Posts a sticky "Release Recommendation" comment and maintains exactly one
+# release:major|minor|patch label on every PR. Deterministic — no AI
+# service involved: release:* label > Conventional Commit type > patch
+# fallback (see .github/scripts/lib/classify.mjs).
+#
+# Uses pull_request_target (not pull_request) because it needs write access
+# to post comments/labels, including on PRs from forks. This is safe here
+# because the job never checks out or executes the PR's own code — it only
+# reads PR metadata (title/body/changed files) through the GitHub API and
+# writes a comment/label back.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: pr-release-recommendation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  recommend:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out the base branch (main), never the PR's head — this is
+      # trusted code only, used to run the classifier script itself.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          # Full history + tags so the classifier can find the latest
+          # v*.*.* release tag to compute the "expected version".
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Compute and post release recommendation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: node .github/scripts/pr-recommendation.mjs

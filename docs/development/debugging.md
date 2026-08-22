@@ -67,4 +67,4 @@ reporting).
 `npm run lint` and `npx tsc -b --noEmit` (see
 [Reference → Commands](/reference/commands)) catch most issues before
 they reach the browser. Both are required CI steps
-(`.github/workflows/ci.yml`) — run them locally before pushing.
+(`.github/workflows/mockops-ci.yml`) — run them locally before pushing.

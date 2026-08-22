@@ -165,16 +165,28 @@ The project follows [Semantic Versioning](https://semver.org/)
 - **MINOR** — new backwards-compatible functionality
 - **PATCH** — backwards-compatible bug fixes
 
-Releases are cut by pushing a `v<major>.<minor>.<patch>` tag (e.g. `v1.2.3`)
-to `main`. The CI workflow (`.github/workflows/ci.yml`) then builds and
-pushes Docker images to `ghcr.io/ahimsarijalu/mockops` tagged with:
+Releases are fully automated by `.github/workflows/mockops-release.yml` on
+every push to `main` — do not push release tags by hand and do not bump
+`version` in `package.json` manually. The workflow:
 
-- `<major>.<minor>.<patch>`
-- `<major>.<minor>`
-- `<major>`
-- `latest` (only from `main`)
+1. Walks the PRs merged into `main` since the last `v*.*.*` tag.
+2. Classifies each one (`.github/scripts/lib/classify.mjs`, deterministic,
+   no AI): an explicit `release:major|minor|patch` label wins; otherwise
+   its Conventional Commits type (`feat:` → minor, `fix:`/`docs:`/
+   `refactor:`/`test:`/`build:`/`ci:`/`chore:` → patch, `!` or
+   `BREAKING CHANGE:` → major); otherwise patch.
+3. Takes the highest bump across all of them, skips the release entirely if
+   every changed file since the last tag is documentation-only, then
+   re-validates, rebuilds, builds/pushes the Docker image to
+   `ghcr.io/ahimsarijalu/mockops` (tagged `<version>` and `latest`), and
+   only then creates the `v<major>.<minor>.<patch>` Git tag and GitHub
+   Release.
 
-Bump `version` in `package.json` to match the tag when cutting a release.
+`.github/workflows/pr-release-recommendation.yml` posts the resulting
+recommendation as a sticky PR comment and keeps exactly one `release:*`
+label in sync — override it by adding the label you actually want before
+merge. See the README's [CI/CD & releases](README.md#cicd--releases)
+section for the full pipeline.
 
 ## Git workflow
 

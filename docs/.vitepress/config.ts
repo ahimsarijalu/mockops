@@ -5,7 +5,7 @@ import { sidebar } from './sidebar'
 
 // Documentation site for MockOps (https://github.com/ahimsarijalu/mockops).
 // Deployed to GitHub Pages as a project site, so `base` must match the repo
-// name — see docs/deployment/github-pages.md and .github/workflows/docs.yml.
+// name — see docs/deployment/github-pages.md and .github/workflows/docs-ci.yml.
 export default withMermaid(
   defineConfig({
     title: 'MockOps',
