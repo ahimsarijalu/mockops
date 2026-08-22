@@ -13,11 +13,21 @@ name: PR Release Recommendation
 
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize, edited]
+    # labeled/unlabeled included so a manual release:* label override
+    # (AGENTS.md tells users this is how to override the recommendation)
+    # refreshes the sticky comment too — the release itself always reads
+    # labels live, but the comment otherwise wouldn't update to match.
+    # Self-limiting: syncLabel below only mutates labels when the target
+    # actually differs from the current state, so a run triggered by its
+    # own label change is a no-op and doesn't re-trigger itself.
+    types: [opened, reopened, synchronize, edited, labeled, unlabeled]
 
 permissions:
   contents: read
   issues: write
+  # Needed to read /pulls/{number}/files (changed-files listing) — issues:
+  # write alone covers comments/labels but not the pull-requests API.
+  pull-requests: read
 
 concurrency:
   group: pr-release-recommendation-${{ github.event.pull_request.number }}
