@@ -1,0 +1,45 @@
+# MockOps
+
+> MockOps is a WireMock API management console: a static single-page React
+> app that manages one or more WireMock servers — mappings, the request
+> journal, near misses, scenarios, recordings, `__files`, global settings —
+> entirely through WireMock's Admin API, called directly from the browser.
+> It has no backend of its own.
+
+MockOps is open source. This file follows the https://llmstxt.org
+convention to help AI tools and coding agents find the canonical
+documentation quickly. See `/llms-full.txt` on this site for every page
+concatenated into one plain-text document.
+
+## Documentation
+
+- [Getting Started overview](https://ahimsarijalu.github.io/mockops/guide/overview.html): what MockOps is, prerequisites, install
+- [Quick Start](https://ahimsarijalu.github.io/mockops/guide/quick-start.html): connect a server and create your first mapping
+- [User Guide: Servers](https://ahimsarijalu.github.io/mockops/features/servers.html)
+- [User Guide: Mappings](https://ahimsarijalu.github.io/mockops/features/mappings.html)
+- [User Guide: Request Journal & Near Misses](https://ahimsarijalu.github.io/mockops/features/requests.html)
+- [User Guide: Scenarios](https://ahimsarijalu.github.io/mockops/features/scenarios.html)
+- [User Guide: Recordings](https://ahimsarijalu.github.io/mockops/features/recordings.html)
+- [User Guide: Files](https://ahimsarijalu.github.io/mockops/features/files.html)
+- [Architecture overview](https://ahimsarijalu.github.io/mockops/architecture/overview.html): runtime model, no backend, browser-to-WireMock
+- [WireMock integration](https://ahimsarijalu.github.io/mockops/architecture/wiremock-integration.html): the `WireMockClient` SDK and Admin API coverage
+- [State management](https://ahimsarijalu.github.io/mockops/architecture/state-management.html): TanStack Query vs. Zustand vs. localStorage
+- [Developer Guide: Local Development](https://ahimsarijalu.github.io/mockops/development/local-development.html)
+- [Developer Guide: Adding a Feature](https://ahimsarijalu.github.io/mockops/development/feature-development.html)
+- [Deployment: Docker](https://ahimsarijalu.github.io/mockops/deployment/docker.html)
+- [Deployment: Kubernetes](https://ahimsarijalu.github.io/mockops/deployment/kubernetes.html)
+- [Deployment: Helm](https://ahimsarijalu.github.io/mockops/deployment/helm.html)
+- [Reference: Configuration](https://ahimsarijalu.github.io/mockops/reference/configuration.html)
+- [Reference: Commands](https://ahimsarijalu.github.io/mockops/reference/commands.html)
+- [Reference: Architecture Decisions](https://ahimsarijalu.github.io/mockops/reference/architecture-decisions.html)
+
+## AI / coding-agent reference
+
+- [Architecture reference](https://ahimsarijalu.github.io/mockops/ai/architecture.html): condensed, factual architecture summary
+- [Conventions](https://ahimsarijalu.github.io/mockops/ai/conventions.html): where code belongs, naming, patterns to follow
+- [Feature map](https://ahimsarijalu.github.io/mockops/ai/feature-map.html): every feature's route/page/API/state files in one table
+
+## Source
+
+- [GitHub repository](https://github.com/ahimsarijalu/mockops)
+- [AGENTS.md](https://github.com/ahimsarijalu/mockops/blob/main/AGENTS.md) — the repository's own agent/contributor guide

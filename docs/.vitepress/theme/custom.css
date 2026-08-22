@@ -1,0 +1,29 @@
+/**
+ * Brand color only — matched to the MockOps app icon (docs/public/favicon.svg,
+ * #863bff) rather than VitePress's default green. Everything else (layout,
+ * typography, spacing) is the stock VitePress theme.
+ */
+:root {
+  --vp-c-brand-1: #863bff;
+  --vp-c-brand-2: #7429f0;
+  --vp-c-brand-3: #9a5cff;
+  --vp-c-brand-soft: rgba(134, 59, 255, 0.14);
+
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-bg: var(--vp-c-brand-2);
+}
+
+.dark {
+  --vp-c-brand-1: #a875ff;
+  --vp-c-brand-2: #9a5cff;
+  --vp-c-brand-3: #863bff;
+  --vp-c-brand-soft: rgba(168, 117, 255, 0.16);
+}
+
+.VPHero .name {
+  background: linear-gradient(120deg, #863bff 30%, #a875ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
