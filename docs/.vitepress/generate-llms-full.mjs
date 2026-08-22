@@ -3,7 +3,7 @@
 // source page in reading order. Runs automatically as part of `npm run
 // docs:build` (see package.json) so the file always reflects the current
 // docs/ content — it is not maintained by hand and is gitignored.
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -52,6 +52,39 @@ const pages = [
   'ai/conventions.md',
   'ai/feature-map.md',
 ]
+
+// The list above is curated for reading order and must be kept in sync by
+// hand, but going out of sync should never be silent: fail loudly with an
+// actionable message rather than quietly omitting a page from the output.
+const NON_PAGE_DIRS = new Set(['.vitepress', 'public'])
+
+async function findMarkdownFiles(dir) {
+  const entries = await readdir(join(docsRoot, dir), { withFileTypes: true })
+  const found = []
+  for (const entry of entries) {
+    const relPath = dir ? `${dir}/${entry.name}` : entry.name
+    if (entry.isDirectory()) {
+      if (!NON_PAGE_DIRS.has(entry.name)) found.push(...(await findMarkdownFiles(relPath)))
+    } else if (entry.name.endsWith('.md')) {
+      found.push(relPath)
+    }
+  }
+  return found
+}
+
+const actualPages = new Set(await findMarkdownFiles(''))
+const listedPages = new Set(pages)
+const missing = [...actualPages].filter((p) => !listedPages.has(p)).sort()
+const stale = [...listedPages].filter((p) => !actualPages.has(p)).sort()
+if (missing.length > 0 || stale.length > 0) {
+  const problems = [
+    missing.length > 0 && `not listed in the \`pages\` array: ${missing.join(', ')}`,
+    stale.length > 0 && `listed but no longer exist: ${stale.join(', ')}`,
+  ].filter(Boolean)
+  throw new Error(
+    `docs/.vitepress/generate-llms-full.mjs's page list is out of sync with docs/ — ${problems.join('; ')}.`,
+  )
+}
 
 const sections = []
 for (const relPath of pages) {
