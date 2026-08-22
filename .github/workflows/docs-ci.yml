@@ -9,23 +9,18 @@ name: Docs CI/CD
 # - A documentation-only change never touches the MockOps app: no app
 #   tests, no application build, no Docker build, no GHCR push, no
 #   application release.
+#
+# Every job always *triggers* and reports a real conclusion (success or
+# skipped) rather than using a `paths` filter to not trigger at all — for
+# the same reason as mockops-ci.yml: if `build` is a required status check,
+# an app-only PR that never triggers this workflow at all would leave that
+# check permanently pending and unable to merge. Skipped satisfies a
+# required check; missing does not.
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'docs/**'
-      - 'README.md'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/docs-ci.yml'
   pull_request:
-    paths:
-      - 'docs/**'
-      - 'README.md'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/docs-ci.yml'
   workflow_dispatch:
 
 # Default to read-only; only the deploy job below elevates to pages/id-token
@@ -36,7 +31,26 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - 'README.md'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/docs-ci.yml'
+
   build:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     # Scoped per-ref and cancelable — a PR's build-only run must never
     # queue behind main's deploy pipeline (they share no state), and a
@@ -76,8 +90,8 @@ jobs:
 
   deploy:
     # Only publish from main — PRs just verify the build above.
-    if: github.event_name != 'pull_request'
-    needs: build
+    if: github.event_name != 'pull_request' && needs.changes.outputs.docs == 'true'
+    needs: [changes, build]
     runs-on: ubuntu-latest
     # Least-privilege: only this job, which only runs for a push to main,
     # gets to write to Pages. The build job above (including every PR run)

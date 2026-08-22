@@ -170,12 +170,12 @@ MockOps and its documentation site have independent CI/CD, so a
 documentation change never triggers an application build/release and an
 application change never redeploys the docs:
 
-| Workflow                                                                           | Trigger                         | What it does                                                                                                                                      |
-| ---------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`mockops-ci.yml`](.github/workflows/mockops-ci.yml)                               | PRs that touch app code         | type-check, lint, unit tests, Playwright e2e smoke, production build, Docker build (validation only, never pushed)                                |
-| [`docs-ci.yml`](.github/workflows/docs-ci.yml)                                     | PRs/pushes that touch `docs/**` | builds the VitePress site; deploys to GitHub Pages only on `main`                                                                                 |
-| [`pr-release-recommendation.yml`](.github/workflows/pr-release-recommendation.yml) | every PR                        | posts/updates a "Release Recommendation" comment and a `release:major\|minor\|patch` label                                                        |
-| [`mockops-release.yml`](.github/workflows/mockops-release.yml)                     | push to `main`                  | computes the next SemVer version, re-validates + builds the app, builds & pushes the Docker image to GHCR, creates the Git tag and GitHub Release |
+| Workflow                                                                           | Trigger                 | What it does                                                                                                                                      |
+| ---------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`mockops-ci.yml`](.github/workflows/mockops-ci.yml)                               | PRs that touch app code | type-check, lint, unit tests, Playwright e2e smoke, production build, Docker build (validation only, never pushed)                                |
+| [`docs-ci.yml`](.github/workflows/docs-ci.yml)                                     | every PR/push           | skips (via a changes-detection job) unless `docs/**`/`README.md` changed; builds the VitePress site; deploys to GitHub Pages only on `main`       |
+| [`pr-release-recommendation.yml`](.github/workflows/pr-release-recommendation.yml) | every PR                | posts/updates a "Release Recommendation" comment and a `release:major\|minor\|patch` label                                                        |
+| [`mockops-release.yml`](.github/workflows/mockops-release.yml)                     | push to `main`          | computes the next SemVer version, re-validates + builds the app, builds & pushes the Docker image to GHCR, creates the Git tag and GitHub Release |
 
 A PR that touches only `docs/**`/`README.md` skips `mockops-ci.yml`'s
 actual work (a `changes` job gates `build-and-test`/`e2e`/`docker` with
