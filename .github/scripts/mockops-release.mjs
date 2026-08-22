@@ -40,7 +40,11 @@ async function gh(path) {
       'User-Agent': 'mockops-release-bot',
     },
   })
-  if (!res.ok) throw new Error(`GitHub API GET ${path} failed: ${res.status} ${await res.text()}`)
+  if (!res.ok) {
+    const err = new Error(`GitHub API GET ${path} failed: ${res.status} ${await res.text()}`)
+    err.status = res.status
+    throw err
+  }
   return res.json()
 }
 
@@ -167,7 +171,11 @@ async function determine() {
     ...new Set(commits.map((c) => extractPrNumber(c.subject)).filter((n) => n !== null)),
   ]
 
-  const prClassifications = await Promise.all(
+  // A commit subject ending in "(#N)" is usually a squash-merge, but N
+  // could coincidentally be an issue number or something else that isn't a
+  // real PR — a 404 there shouldn't abort the whole release, just fall
+  // back to classifying that commit like any other non-PR one.
+  const prResults = await Promise.allSettled(
     prNumbers.map(async (number) => {
       const pr = await gh(`/repos/${repo}/pulls/${number}`)
       const labels = (pr.labels || []).map((l) => l.name)
@@ -176,8 +184,23 @@ async function determine() {
     }),
   )
 
+  const unresolvedPrNumbers = new Set()
+  const prClassifications = []
+  prResults.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      prClassifications.push(result.value)
+    } else if (result.reason?.status === 404) {
+      unresolvedPrNumbers.add(prNumbers[i])
+    } else {
+      throw result.reason
+    }
+  })
+
   const commitOnlyClassifications = commits
-    .filter((c) => extractPrNumber(c.subject) === null)
+    .filter((c) => {
+      const number = extractPrNumber(c.subject)
+      return number === null || unresolvedPrNumbers.has(number)
+    })
     .map((c) => classifyChange({ title: c.subject, body: c.body, labels: [] }))
 
   const allClassifications = [...prClassifications, ...commitOnlyClassifications]
@@ -190,7 +213,7 @@ async function determine() {
     version,
     bump,
     reason: `highest bump among ${allClassifications.length} change(s) since ${previousTag}`,
-    prNumbers,
+    prNumbers: prNumbers.filter((n) => !unresolvedPrNumbers.has(n)),
   }
 }
 

@@ -90,7 +90,7 @@ jobs:
 
   deploy:
     # Only publish from main — PRs just verify the build above.
-    if: github.event_name != 'pull_request' && needs.changes.outputs.docs == 'true'
+    if: github.event_name != 'pull_request' && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.docs == 'true')
     needs: [changes, build]
     runs-on: ubuntu-latest
     # Least-privilege: only this job, which only runs for a push to main,
