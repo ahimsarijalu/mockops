@@ -47,9 +47,14 @@ jobs:
       - name: Build docs
         run: npm run docs:build
 
-      - uses: actions/configure-pages@v5
+      # A PR run only needs to prove the build above succeeds — it never
+      # deploys, so it has no reason to call the Pages API (which 404s
+      # until Pages is enabled on the repository).
+      - if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
 
