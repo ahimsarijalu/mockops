@@ -14,6 +14,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "node docs/.vitepress/generate-llms-full.mjs && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -71,12 +74,15 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
+    "mermaid": "^11.17.0",
     "msw": "^2.14.6",
     "prettier": "^3.8.4",
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17",
     "vitest": "^4.1.8"
   }
 }

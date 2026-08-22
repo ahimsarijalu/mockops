@@ -16,6 +16,11 @@ coverage
 test-results
 playwright-report
 
+# VitePress
+docs/.vitepress/cache
+docs/.vitepress/dist
+docs/public/llms-full.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
