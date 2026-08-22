@@ -58,6 +58,15 @@ function tagExists(tag) {
   }
 }
 
+function commitExists(sha) {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${sha}^{commit}`], { stdio: 'pipe' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 function extractPrNumber(subject) {
   const merge = subject.match(/^Merge pull request #(\d+)/)
   if (merge) return Number(merge[1])
@@ -66,10 +75,34 @@ function extractPrNumber(subject) {
   return null
 }
 
+const ZERO_SHA = '0000000000000000000000000000000000000000'
+
 async function determine() {
   const previousTag = latestTag()
 
   if (!previousTag) {
+    // No release has ever shipped, so there's no tag to diff against for
+    // the usual docs-only guard below. Fall back to the push event's own
+    // before/after range (when it's a real commit, not a brand-new branch
+    // or the repo's very first commit) so a docs-only first push still
+    // doesn't cut a release.
+    const beforeSha = process.env.BEFORE_SHA
+    if (beforeSha && beforeSha !== ZERO_SHA && commitExists(beforeSha)) {
+      const pushChangedFiles = git(['diff', '--name-only', `${beforeSha}..HEAD`])
+        .split('\n')
+        .filter(Boolean)
+      if (isDocsOnly(pushChangedFiles)) {
+        return {
+          releaseRequired: false,
+          previousVersion: null,
+          version: null,
+          bump: null,
+          reason: 'no prior release exists, and this push is documentation-only',
+          prNumbers: [],
+        }
+      }
+    }
+
     const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
     return {
       releaseRequired: true,

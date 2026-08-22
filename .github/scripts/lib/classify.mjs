@@ -1,7 +1,14 @@
 // Deterministic release classification shared by pr-recommendation.mjs and
-// mockops-release.mjs. No AI/external service involved — see
-// docs/reference rules: explicit label > conventional commit > diff-based
-// docs-only check > patch fallback.
+// mockops-release.mjs. No AI/external service involved — priority is:
+// breaking change > Conventional Commit type > release:* label > patch
+// fallback. The label is checked *after* the Conventional Commit type, not
+// before: the recommendation workflow re-applies whatever label it
+// computes on every run, so if the label were checked first, the bot's own
+// previous label would outrank a freshly-edited title and the
+// recommendation could never change (and a label downgrade could never
+// stick). Keeping title-parsing authoritative when the title is a
+// recognized Conventional Commit avoids that; the label still matters as
+// the deciding signal for a plain, non-conventional title.
 
 const CONVENTIONAL_RE = /^(\w+)(\([^)]*\))?(!)?:\s*(.+)/
 const BREAKING_FOOTER_RE = /BREAKING[ -]CHANGE:/i
@@ -34,11 +41,6 @@ export function parseConventional(subject) {
  * Returns { bump, reason, source } — bump is always 'major' | 'minor' | 'patch'.
  */
 export function classifyChange({ title, body, labels = [] } = {}) {
-  const label = RELEASE_LABELS.find((level) => labels.includes(`release:${level}`))
-  if (label) {
-    return { bump: label, reason: `explicit \`release:${label}\` label`, source: 'label' }
-  }
-
   const conv = parseConventional(title)
   const breaking = (conv && conv.breaking) || BREAKING_FOOTER_RE.test(body || '')
   if (breaking) {
@@ -68,10 +70,19 @@ export function classifyChange({ title, body, labels = [] } = {}) {
     }
   }
 
+  // Only reached for a title with no recognized Conventional Commit type —
+  // a release:* label is the deciding signal there instead (and, since
+  // nothing above can override it, a human setting/changing the label on
+  // such a PR sticks across subsequent runs).
+  const label = RELEASE_LABELS.find((level) => labels.includes(`release:${level}`))
+  if (label) {
+    return { bump: label, reason: `explicit \`release:${label}\` label`, source: 'label' }
+  }
+
   return {
     bump: 'patch',
     reason:
-      'no `release:*` label or recognized Conventional Commit type found; defaulting to patch',
+      'no recognized Conventional Commit type in the title and no `release:*` label; defaulting to patch',
     source: 'fallback',
   }
 }
