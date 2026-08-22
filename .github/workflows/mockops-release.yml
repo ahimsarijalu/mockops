@@ -45,6 +45,7 @@ jobs:
       - id: determine
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: node .github/scripts/mockops-release.mjs
 
       - name: Summary

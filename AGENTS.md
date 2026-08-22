@@ -184,9 +184,12 @@ every push to `main` — do not push release tags by hand and do not bump
 
 `.github/workflows/pr-release-recommendation.yml` posts the resulting
 recommendation as a sticky PR comment and keeps exactly one `release:*`
-label in sync — override it by adding the label you actually want before
-merge. See the README's [CI/CD & releases](README.md#cicd--releases)
-section for the full pipeline.
+label in sync with it. The label always mirrors the PR title when the
+title is a recognized Conventional Commit — to change the recommended
+level, edit the title. For a plain, non-conventional title, the label
+itself is the deciding signal, so setting/editing it there does stick.
+See the README's [CI/CD & releases](README.md#cicd--releases) section for
+the full pipeline.
 
 ## Git workflow
 
