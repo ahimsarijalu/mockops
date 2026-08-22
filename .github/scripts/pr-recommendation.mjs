@@ -91,7 +91,13 @@ async function main() {
     : currentVersion
 
   await syncLabel(classification.bump)
-  await syncComment({ classification, docsOnly, currentVersion, expectedVersion })
+  await syncComment({
+    classification,
+    docsOnly,
+    currentVersion,
+    expectedVersion,
+    firstRelease: !previousTag,
+  })
 
   console.log(
     `Recommendation: ${classification.bump} (${classification.reason}). ` +
@@ -133,9 +139,18 @@ async function syncLabel(bump) {
   }
 }
 
-async function syncComment({ classification, docsOnly, currentVersion, expectedVersion }) {
+async function syncComment({
+  classification,
+  docsOnly,
+  currentVersion,
+  expectedVersion,
+  firstRelease,
+}) {
   const docsNote = docsOnly
     ? '\n> This PR only touches documentation. Even if merged, it will **not** trigger a MockOps application release — Docs Deploy runs instead.\n'
+    : ''
+  const firstReleaseNote = firstRelease
+    ? "\n> No release has shipped yet, so current/expected version are both `package.json`'s version, unbumped — the first release establishes the baseline rather than applying this recommendation.\n"
     : ''
 
   const body = `${MARKER}
@@ -146,7 +161,7 @@ async function syncComment({ classification, docsOnly, currentVersion, expectedV
 **Expected version:** \`${expectedVersion}\`
 
 **Reason:** ${classification.reason}
-${docsNote}
+${docsNote}${firstReleaseNote}
 <sub>Updates automatically as this PR changes. Informational only — the release level that actually ships is decided by \`mockops-release.yml\` from every PR merged into \`main\` since the last release (highest of: Conventional Commit type → \`release:*\` label, used only for a non-conventional title → patch fallback), and a release only happens at all if at least one merged PR touches non-documentation files.</sub>`
 
   const comments = await ghPaginated(`/repos/${repo}/issues/${prNumber}/comments`)
