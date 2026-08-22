@@ -8,7 +8,7 @@ flowchart TD
     Src["Source (repo)"]
     Build["Build stage<br/>node:22-alpine<br/>npm ci → generate-routes → build"]
     Assets["Static assets<br/>/app/dist"]
-    Runtime["Runtime stage<br/>nginx:1.27-alpine<br/>deploy/nginx/nginx.conf"]
+    Runtime["Runtime stage<br/>nginxinc/nginx-unprivileged:1.27-alpine<br/>deploy/nginx/nginx.conf<br/>runs as uid/gid 101, non-root"]
     Container["mockops container<br/>port 8080"]
 
     Src --> Build --> Assets --> Runtime --> Container
@@ -36,10 +36,14 @@ RUN npm run generate-routes && npm run build
 ## Runtime stage
 
 ```dockerfile
-FROM nginx:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+
+USER root
 RUN rm -rf /usr/share/nginx/html/*
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY deploy/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build --chown=101:101 /app/dist /usr/share/nginx/html
+COPY --chown=101:101 deploy/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+USER 101
+
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
   CMD wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1
@@ -48,6 +52,15 @@ CMD ["nginx", "-g", "daemon off;"]
 
 Only the compiled `dist/` output and the Nginx config cross into the final
 image — no Node, no source, no `node_modules`.
+
+**Non-root**: the runtime image is
+[`nginxinc/nginx-unprivileged`](https://github.com/nginxinc/docker-nginx-unprivileged)
+rather than the plain `nginx` image, so the container actually runs as
+uid/gid `101` (not root) — `USER root` above is only for the build-time
+`rm`/`COPY` steps; the image's final `USER 101` is what the running
+container uses. This matches the `runAsNonRoot: true` / `runAsUser: 101`
+`securityContext` already set in `k8s/deployment.yaml` and
+`helm/mockops/values.yaml`.
 
 ## Nginx configuration (`deploy/nginx/nginx.conf`)
 
