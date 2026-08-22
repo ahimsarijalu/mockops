@@ -10,7 +10,7 @@ built and deployed — separate from deploying the MockOps _application_
 ```mermaid
 flowchart LR
     Push["Push to main<br/>(docs/** or workflow changes)"]
-    Workflow[".github/workflows/docs.yml"]
+    Workflow[".github/workflows/docs-ci.yml"]
     Install["npm ci"]
     Build["npm run docs:build<br/>(generates llms-full.txt, then vitepress build docs)"]
     Artifact["actions/upload-pages-artifact<br/>docs/.vitepress/dist"]
@@ -20,15 +20,16 @@ flowchart LR
     Push --> Workflow --> Install --> Build --> Artifact --> Deploy --> Pages
 ```
 
-## Workflow: `.github/workflows/docs.yml`
+## Workflow: `.github/workflows/docs-ci.yml`
 
-A **separate** workflow from `ci.yml` (application CI is untouched — see
+A **separate** workflow from `mockops-ci.yml`/`mockops-release.yml`
+(application CI/CD is untouched — see
 [Architecture Decisions](/reference/architecture-decisions)), using the
 official GitHub Pages actions:
 
 - `actions/checkout` (`fetch-depth: 0`, needed for VitePress's
   `lastUpdated` git-history lookup)
-- `actions/setup-node` (Node 22, matching `ci.yml`)
+- `actions/setup-node` (Node 22, matching `mockops-ci.yml`)
 - `actions/configure-pages`
 - `actions/upload-pages-artifact` — uploads `docs/.vitepress/dist`
 - `actions/deploy-pages` — deploys to the repository's GitHub Pages
@@ -39,7 +40,10 @@ official GitHub Pages actions:
 `workflow_dispatch`. Pull requests only run the build (to catch a broken
 docs build in review) — the deploy job runs on `main` only.
 
-**Permissions** (least-privilege, no long-lived tokens):
+**Permissions** (least-privilege, no long-lived tokens): the workflow
+defaults to `contents: read` for every job, including PR builds. Only the
+`deploy` job — which only ever runs on a push to `main`, never on a PR —
+elevates to:
 
 ```yaml
 permissions:

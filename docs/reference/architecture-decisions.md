@@ -180,18 +180,24 @@ provides.
 path.
 
 **Decision**: Use VitePress (added as a devDependency, `docs/` as its
-root), deployed via a **dedicated** `.github/workflows/docs.yml` using the
-official `configure-pages`/`upload-pages-artifact`/`deploy-pages` actions,
-rather than extending `.github/workflows/ci.yml`.
+root), deployed via a **dedicated** `.github/workflows/docs-ci.yml` using
+the official `configure-pages`/`upload-pages-artifact`/`deploy-pages`
+actions, entirely separate from `.github/workflows/mockops-ci.yml` and
+`.github/workflows/mockops-release.yml`.
 
 **Why**: VitePress is a Vite-based Markdown site generator — consistent
 with the app's own Vite-based tooling and Node 22 toolchain, needing no
 new build system to learn. A separate workflow keeps documentation
 deployment (which should ship on every relevant `main` push) decoupled
-from application CI's gating logic (type-check/lint/test/build/Docker),
-so neither can block or interfere with the other, and each has exactly
-the permissions it needs (`ci.yml` needs `packages: write` for GHCR;
-`docs.yml` needs `pages: write`/`id-token: write` instead).
+from application CI/CD's gating logic (type-check/lint/test/build/Docker/
+GHCR/tag/release), so neither can block or interfere with the other, and
+each has exactly the permissions it needs (`mockops-release.yml` needs
+`contents: write`/`packages: write` for tags and GHCR; `docs-ci.yml`'s
+`deploy` job needs `pages: write`/`id-token: write` instead — and only
+that one job, never a PR build). It also means a documentation-only PR
+never triggers a MockOps application release: `mockops-release.yml` walks
+the diff since the last tag and skips entirely when every changed file is
+documentation.
 
 **Trade-offs**: A second, mostly-parallel workflow file to maintain; two
 places `npm ci` runs on the same push if both `docs/` and `src/` change.

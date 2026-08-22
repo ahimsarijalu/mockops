@@ -138,11 +138,12 @@ docker compose up --build
 
 ### Pre-built images
 
-Images are published to GitHub Container Registry on every push to `main`
-and on tagged releases:
+Release images are published to GitHub Container Registry by
+[`mockops-release.yml`](.github/workflows/mockops-release.yml) whenever a
+release actually ships (see [CI/CD](#cicd--releases) below):
 
 ```bash
-# Latest from main
+# Latest release
 docker run -p 8080:8080 ghcr.io/ahimsarijalu/mockops:latest
 
 # A specific release, e.g. v1.2.3
@@ -150,8 +151,9 @@ docker run -p 8080:8080 ghcr.io/ahimsarijalu/mockops:1.2.3
 ```
 
 Available tags follow [Semantic Versioning](https://semver.org/):
-`latest`, `<major>.<minor>.<patch>`, `<major>.<minor>`, and `<major>` (e.g.
-`1`, `1.2`, `1.2.3`).
+`latest` and `<major>.<minor>.<patch>` (e.g. `1.2.3`). Prefer the immutable
+version tag for anything you deploy — `latest` always points at the most
+recent release.
 
 For Kubernetes, apply the manifests in `k8s/` (via `kubectl apply -k k8s/`)
 or install the Helm chart in `helm/mockops`:
@@ -162,5 +164,48 @@ helm install mockops ./helm/mockops \
   --set image.tag=latest
 ```
 
-CI (`.github/workflows/ci.yml`) runs type-checking, linting, unit tests, the
-production build, and a Docker build on every push and pull request.
+## CI/CD & releases
+
+MockOps and its documentation site have independent CI/CD, so a
+documentation change never triggers an application build/release and an
+application change never redeploys the docs:
+
+| Workflow                                                                           | Trigger                         | What it does                                                                                                                                      |
+| ---------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`mockops-ci.yml`](.github/workflows/mockops-ci.yml)                               | PRs that touch app code         | type-check, lint, unit tests, Playwright e2e smoke, production build, Docker build (validation only, never pushed)                                |
+| [`docs-ci.yml`](.github/workflows/docs-ci.yml)                                     | PRs/pushes that touch `docs/**` | builds the VitePress site; deploys to GitHub Pages only on `main`                                                                                 |
+| [`pr-release-recommendation.yml`](.github/workflows/pr-release-recommendation.yml) | every PR                        | posts/updates a "Release Recommendation" comment and a `release:major\|minor\|patch` label                                                        |
+| [`mockops-release.yml`](.github/workflows/mockops-release.yml)                     | push to `main`                  | computes the next SemVer version, re-validates + builds the app, builds & pushes the Docker image to GHCR, creates the Git tag and GitHub Release |
+
+A PR that touches only `docs/**`/`README.md` skips `mockops-ci.yml`
+entirely and — once merged — never produces a MockOps release, GHCR push,
+Git tag, or GitHub Release; `docs-ci.yml` deploys the docs instead. A PR
+that touches both app and docs files runs both pipelines.
+
+### Release versioning
+
+Releases follow [Semantic Versioning](https://semver.org/) and are
+computed deterministically (no AI service involved) from every PR merged
+into `main` since the last release, in priority order:
+
+1. An explicit `release:major` / `release:minor` / `release:patch` label on
+   the PR.
+2. Its title's [Conventional Commits](https://www.conventionalcommits.org/)
+   type — `feat:` → minor, `fix:`/`docs:`/`refactor:`/`test:`/`build:`/
+   `ci:`/`chore:` → patch, any type with `!` or a `BREAKING CHANGE:` footer
+   → major.
+3. Patch, if neither of the above applies.
+
+When multiple PRs are included in one release, the highest bump wins (e.g.
+`patch` + `minor` + `patch` → `minor`). Example:
+
+- `fix: fix response matching` → patch
+- `feat: add mapping search` → minor
+- `feat!: change mapping API` → major
+
+Releases only happen if at least one merged PR touches non-documentation
+files — an all-docs batch is skipped.
+
+CI (`mockops-ci.yml`) runs type-checking, linting, unit tests, Playwright
+e2e, the production build, and a Docker build validation on every pull
+request.

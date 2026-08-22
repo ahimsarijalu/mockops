@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-| Requirement                     | Version                                          | Source                                                                                   |
-| ------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Node.js                         | 22                                               | `.github/workflows/ci.yml` (`node-version: 22`) and `Dockerfile` (`FROM node:22-alpine`) |
-| npm                             | bundled with Node 22                             | `package-lock.json` is npm's lockfile; no other package manager config is present        |
-| A WireMock server to connect to | any version exposing the standard `/__admin` API | not bundled with MockOps — run your own, e.g. via `docker-compose.yml` (see below)       |
+| Requirement                     | Version                                          | Source                                                                                           |
+| ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Node.js                         | 22                                               | `.github/workflows/mockops-ci.yml` (`node-version: 22`) and `Dockerfile` (`FROM node:22-alpine`) |
+| npm                             | bundled with Node 22                             | `package-lock.json` is npm's lockfile; no other package manager config is present                |
+| A WireMock server to connect to | any version exposing the standard `/__admin` API | not bundled with MockOps — run your own, e.g. via `docker-compose.yml` (see below)               |
 
 `package.json` does not declare an `engines` field, so nothing enforces the
 Node version at install time — Node 22 is what CI and the Docker build

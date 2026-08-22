@@ -1,0 +1,97 @@
+name: MockOps CI
+
+# Validates the MockOps application itself: type-check, lint, unit tests,
+# e2e smoke tests, production build, and a Docker build check.
+#
+# Deliberately does NOT run for documentation-only pull requests (see
+# paths-ignore below) — that's the job of docs-ci.yml. A PR that touches any
+# non-docs file still runs the full suite, including PRs that touch both
+# app and docs files.
+#
+# This workflow never pushes a Docker image. Publishing to GHCR, Git tags,
+# and GitHub Releases are handled exclusively by mockops-release.yml on
+# `main`, after this same validation has passed there too — running it a
+# second time here on every push to `main` would just duplicate that work.
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '.github/workflows/docs-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mockops-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate route tree
+        run: npm run generate-routes
+
+      - name: Type check
+        run: npx tsc -b --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate route tree
+        run: npm run generate-routes
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests
+        run: npm run test:e2e
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, e2e]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      # Validation only — never pushed. This proves the image still builds
+      # on every PR without granting PR runs any registry credentials.
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: mockops:pr-${{ github.event.pull_request.number || github.run_id }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

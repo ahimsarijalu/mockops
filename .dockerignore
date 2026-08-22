@@ -9,3 +9,8 @@ playwright-report
 *.log
 helm
 k8s
+docs
+e2e
+.husky
+.vscode
+*.md

@@ -40,7 +40,7 @@ No environment variables are passed into the container by
 ## The documentation site
 
 `docs/.vitepress/config.ts` and `docs/.vitepress/generate-llms-full.mjs`
-read no environment variables either; `.github/workflows/docs.yml` needs
+read no environment variables either; `.github/workflows/docs-ci.yml` needs
 none beyond the ambient GitHub Actions context (`GITHUB_TOKEN`, provided
 automatically by `actions/deploy-pages`/`actions/configure-pages`, not
 something set explicitly in the workflow).
