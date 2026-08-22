@@ -9,7 +9,8 @@ built and deployed — separate from deploying the MockOps _application_
 
 ```mermaid
 flowchart LR
-    Push["Push to main<br/>(docs/**, README.md, or workflow changes)"]
+    Push["Push to main"]
+    Changes["changes job<br/>dorny/paths-filter"]
     Workflow[".github/workflows/docs-ci.yml"]
     Install["npm ci"]
     Build["npm run docs:build<br/>(generates llms-full.txt, then vitepress build docs)"]
@@ -19,7 +20,8 @@ flowchart LR
     Deploy["actions/deploy-pages"]
     Pages["GitHub Pages<br/>https://ahimsarijalu.github.io/mockops/"]
 
-    Push --> Workflow --> Install --> Build --> BuildArtifact --> Download --> Artifact --> Deploy --> Pages
+    Push --> Workflow --> Changes -->|docs changed| Install --> Build --> BuildArtifact --> Download --> Artifact --> Deploy --> Pages
+    Changes -->|docs unchanged| Skip["build/deploy report skipped"]
 ```
 
 ## Workflow: `.github/workflows/docs-ci.yml`
@@ -30,6 +32,9 @@ A **separate** workflow from `mockops-ci.yml`/`mockops-release.yml`
 official GitHub Pages actions — but only from the `deploy` job (see
 **Permissions** below for why):
 
+- `dorny/paths-filter` — `changes` job; determines whether `docs/**`,
+  `README.md`, `package.json`, `package-lock.json`, or the workflow file
+  itself changed, feeding `if:` on `build`/`deploy` below
 - `actions/checkout` (`fetch-depth: 0`, needed for VitePress's
   `lastUpdated` git-history lookup) and `actions/setup-node` (Node 22,
   matching `mockops-ci.yml`) — `build` job
@@ -41,10 +46,17 @@ official GitHub Pages actions — but only from the `deploy` job (see
   `actions/deploy-pages` — all in the `deploy` job, which is the only job
   that ever calls the Pages API
 
-**Triggers**: pushes to `main` that touch `docs/**`, `README.md`,
-`package.json`, `package-lock.json`, or the workflow file itself, plus a
-manual `workflow_dispatch`. Pull requests only run the `build` job (to
-catch a broken docs build in review) — `deploy` only runs on `main`.
+**Triggers**: every push to `main` and every pull request, plus a manual
+`workflow_dispatch` — the workflow always triggers, but `build`/`deploy`
+report `skipped` (not "never ran") unless the `changes` job detects a
+relevant file changed. This matters if these jobs are configured as
+required status checks: a `paths` filter on the trigger itself, instead of
+this `if:`-gated approach, would leave a non-docs PR's check permanently
+pending rather than satisfied (see
+[Architecture Decisions](/reference/architecture-decisions) for the same
+reasoning applied to `mockops-ci.yml`). Pull requests only run the `build`
+job (to catch a broken docs build in review) — `deploy` only runs on
+`main`.
 
 **Permissions** (least-privilege, no long-lived tokens): the workflow
 defaults to `contents: read` for every job, including PR builds. Only the
