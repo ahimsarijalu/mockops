@@ -48,8 +48,9 @@ permissions:
   id-token: write
 ```
 
-`concurrency` is set so a new push cancels any in-flight docs deploy
-rather than racing it.
+`concurrency` is set so a new push waits for any in-flight docs deploy to
+finish rather than cancelling it — a Pages deployment is never
+interrupted mid-way.
 
 ## Base path
 

@@ -3,7 +3,7 @@
 // source page in reading order. Runs automatically as part of `npm run
 // docs:build` (see package.json) so the file always reflects the current
 // docs/ content — it is not maintained by hand and is gitignored.
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -70,6 +70,7 @@ const header = `# MockOps — Full Documentation
 > For the source repository, see https://github.com/ahimsarijalu/mockops.
 `
 
+await mkdir(join(docsRoot, 'public'), { recursive: true })
 await writeFile(join(docsRoot, 'public/llms-full.txt'), `${header}\n${sections.join('\n\n---\n\n')}\n`)
 
 console.log(`Wrote docs/public/llms-full.txt (${pages.length} pages)`)
