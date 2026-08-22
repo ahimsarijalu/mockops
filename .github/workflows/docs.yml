@@ -21,8 +21,8 @@ permissions:
   pages: write
   id-token: write
 
-# Cancel an in-progress deploy in favor of a newer one on the same branch;
-# never cancel a run that's already deploying to Pages.
+# A new push waits for any in-flight deploy to finish rather than
+# cancelling it, so a Pages deployment is never interrupted mid-way.
 concurrency:
   group: pages
   cancel-in-progress: false
