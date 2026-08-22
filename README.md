@@ -177,10 +177,13 @@ application change never redeploys the docs:
 | [`pr-release-recommendation.yml`](.github/workflows/pr-release-recommendation.yml) | every PR                        | posts/updates a "Release Recommendation" comment and a `release:major\|minor\|patch` label                                                        |
 | [`mockops-release.yml`](.github/workflows/mockops-release.yml)                     | push to `main`                  | computes the next SemVer version, re-validates + builds the app, builds & pushes the Docker image to GHCR, creates the Git tag and GitHub Release |
 
-A PR that touches only `docs/**`/`README.md` skips `mockops-ci.yml`
-entirely and — once merged — never produces a MockOps release, GHCR push,
-Git tag, or GitHub Release; `docs-ci.yml` deploys the docs instead. A PR
-that touches both app and docs files runs both pipelines.
+A PR that touches only `docs/**`/`README.md` skips `mockops-ci.yml`'s
+actual work (a `changes` job gates `build-and-test`/`e2e`/`docker` with
+`if:`, so they report `skipped` rather than never running at all — which
+matters if they're configured as required status checks) and — once
+merged — never produces a MockOps release, GHCR push, Git tag, or GitHub
+Release; `docs-ci.yml` deploys the docs instead. A PR that touches both
+app and docs files runs both pipelines in full.
 
 ### Release versioning
 
