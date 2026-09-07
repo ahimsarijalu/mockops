@@ -1,5 +1,10 @@
 import Editor, { type OnMount } from '@monaco-editor/react'
 import { useUiStore } from '@/shared/stores/ui-store'
+// Side-effect import: configures @monaco-editor/react to use the locally
+// bundled `monaco-editor` instead of its CDN default. This file is already
+// lazy-loaded (its own chunk), so Monaco's core only downloads/executes
+// when a JSON editor actually mounts, not on every page load.
+import '@/shared/lib/monaco-setup'
 
 interface MonacoJsonEditorProps {
   value: string
